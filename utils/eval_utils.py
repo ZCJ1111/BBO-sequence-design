@@ -16,8 +16,10 @@ class Runner:
     def run(self, landscape, starting_sequence, model, explorer):
         self.results = pd.DataFrame()
         starting_fitness = landscape.get_fitness([starting_sequence])[0]
-        self.update_results(0, [starting_sequence], [starting_fitness])
-        
+        _, _, _= self.update_results(0, [starting_sequence], [starting_fitness])
+        rounds_=[]
+        score_maxs=[]
+        rts=[]
         for round in range(1, self.num_rounds+1):
             round_start_time = time.time()
 
@@ -27,8 +29,18 @@ class Runner:
             true_scores = landscape.get_fitness(sequences)
 
             round_running_time = time.time()-round_start_time
-            self.update_results(round, sequences, true_scores, round_running_time)
-    
+            roundss, score_max,rt= self.update_results(round, sequences, true_scores, round_running_time)
+            rounds_.append(roundss)
+            score_maxs.append(score_max)
+            rts.append(rt)
+            result=pd.DataFrame({
+                "round":rounds_,
+                "scoremax":score_maxs,
+                "run_time":rts
+            })
+            result.to_csv('train_log.csv',index=False)
+            
+            
     def update_results(self, round, sequences, true_scores, running_time=0.0):
         self.results = self.results.append(
             pd.DataFrame({
@@ -38,6 +50,7 @@ class Runner:
             })
         )
         print('round: {}  max fitness score: {:.3f}  running time: {:.2f} (sec)'.format(round, self.results['true_score'].max(), running_time))
+        return round, self.results['true_score'].max(), running_time
     
     @property
     def sequence_buffer(self):
