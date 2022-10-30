@@ -17,7 +17,7 @@ def get_args():
 
     # algorithm arguments
     parser.add_argument('--alg', help='exploration algorithm', type=str, default='pex', choices=algorithm_collection.keys())
-    parser.add_argument('--num_rounds', help='number of query rounds', type=np.int32, default=10)
+    parser.add_argument('--num_rounds', help='number of query rounds', type=np.int32, default=2)
     parser.add_argument('--num_queries_per_round', help='number of black-box queries per round', type=np.int32, default=100)
     parser.add_argument('--num_model_queries_per_round', help='number of model predictions per round', type=np.int32, default=2000)
     
@@ -50,6 +50,6 @@ if __name__=='__main__':
     landscape, alphabet, starting_sequence = get_landscape(args)
     model = get_model(args, alphabet=alphabet, starting_sequence=starting_sequence)
     explorer = get_algorithm(args, model=model, alphabet=alphabet, starting_sequence=starting_sequence)
-
+    # print('alg:', algorithm_collection.keys())
     runner = Runner(args)
     runner.run(landscape, starting_sequence, model, explorer)
