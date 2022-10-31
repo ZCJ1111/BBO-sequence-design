@@ -34,15 +34,17 @@ class BO(flexs.Explorer):
 
     def __init__(
         self,
+        args,
         model: flexs.Model,
-        rounds: int,
-        sequences_batch_size: int,
-        model_queries_per_batch: int,
-        starting_sequence: str,
+        # model,
         alphabet: str,
-        log_file: Optional[str] = None,
-        method: str = "EI",
-        recomb_rate: float = 0,
+        starting_sequence: str,
+        # rounds: int,
+        # sequences_batch_size: int,
+        # model_queries_per_batch: int,
+        # log_file: Optional[str] = None,
+        # method: str = "EI",
+        # recomb_rate: float = 0
     ):
         """
         Args:
@@ -52,22 +54,31 @@ class BO(flexs.Explorer):
                 BO proposes samples, default 0.
 
         """
+        method="EI"
         name = f"BO_method={method}"
-        if not isinstance(model, flexs.Ensemble):
-            model = flexs.Ensemble([model], combine_with=lambda x: x)
+        # if not isinstance(model, flexs.Ensemble):
+        #     print('model',vars(model))
 
-        super().__init__(
-            model,
-            name,
-            rounds,
-            sequences_batch_size,
-            model_queries_per_batch,
-            starting_sequence,
-            log_file,
-        )
+        #     model = flexs.Ensemble([model], combine_with=lambda x: x)
+ 
+        # super().__init__(
+        #     model,
+        #     name,
+        #     rounds,
+        #     sequences_batch_size,
+        #     model_queries_per_batch,
+        #     starting_sequence,
+        #     log_file,
+        # )
+        self.name=name
+        self.starting_sequence=starting_sequence
+        self.sequences_batch_size=args.batch_size
+        self.rounds=args.num_queries_per_round
+        self.model_queries_per_batch=args.num_model_queries_per_round
+        self.model=model
         self.alphabet = alphabet
-        self.method = method
-        self.recomb_rate = recomb_rate
+        self.method = "EI"
+        self.recomb_rate = 0
         self.best_fitness = 0
         self.num_actions = 0
         self.state = None
@@ -125,7 +136,8 @@ class BO(flexs.Explorer):
 
     def EI(self, vals):
         """Compute expected improvement."""
-        return np.mean([max(val - self.best_fitness, 0) for val in vals])
+        # return np.mean([max(val - self.best_fitness, 0) for val in vals])
+        return np.mean([max(vals - self.best_fitness, 0)])
 
     @staticmethod
     def UCB(vals):
@@ -251,8 +263,11 @@ class BO(flexs.Explorer):
             samples.update(random_sequences)
         # get predicted fitnesses of samples
         samples = list(samples)
-        preds = np.mean(self.model.get_fitness(samples), axis=1)
+        # print('sample',samples)
+        preds = np.mean(self.model.get_fitness(samples))
+        # print('pred',preds)
         # train ensemble model before returning samples
         self.train_models()
-
+        import random
+        samples= random.sample(samples,self.rounds)
         return samples, preds

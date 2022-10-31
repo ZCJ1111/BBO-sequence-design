@@ -5,6 +5,7 @@ from model import get_model, model_collection
 from model.ensemble import ensemble_rules
 from utils.os_utils import get_arg_parser
 from utils.eval_utils import Runner
+import flexs
 
 def get_args():
     parser = get_arg_parser()
@@ -17,12 +18,15 @@ def get_args():
 
     # algorithm arguments
     parser.add_argument('--alg', help='exploration algorithm', type=str, default='pex', choices=algorithm_collection.keys())
-    parser.add_argument('--num_rounds', help='number of query rounds', type=np.int32, default=2)
+    parser.add_argument('--name', help='algorithm name', type=str, default='pexmufac')
+    parser.add_argument('--runs', help='random runs tag', type=np.int, default=1)
+
+    parser.add_argument('--num_rounds', help='number of query rounds', type=np.int32, default=50)
     parser.add_argument('--num_queries_per_round', help='number of black-box queries per round', type=np.int32, default=100)
     parser.add_argument('--num_model_queries_per_round', help='number of model predictions per round', type=np.int32, default=2000)
     
     # model arguments
-    parser.add_argument('--net', help='surrogate model architecture', type=str, default='mufacnet', choices=model_collection.keys())
+    parser.add_argument('--net', help='surrogate model architecture', type=str, default='cnn', choices=model_collection.keys())
     parser.add_argument('--lr', help='learning rate', type=np.float32, default=1e-3)
     parser.add_argument('--batch_size', help='batch size', type=np.int32, default=256)
     parser.add_argument('--patience', help='number of epochs without improvement to wait before terminating training', type=np.int32, default=10)
@@ -50,6 +54,5 @@ if __name__=='__main__':
     landscape, alphabet, starting_sequence = get_landscape(args)
     model = get_model(args, alphabet=alphabet, starting_sequence=starting_sequence)
     explorer = get_algorithm(args, model=model, alphabet=alphabet, starting_sequence=starting_sequence)
-    # print('alg:', algorithm_collection.keys())
     runner = Runner(args)
-    runner.run(landscape, starting_sequence, model, explorer)
+    runner.run(landscape, starting_sequence, model, explorer, args.name, args.runs)

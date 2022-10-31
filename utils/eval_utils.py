@@ -13,7 +13,8 @@ class Runner:
         self.num_rounds = args.num_rounds
         self.num_queries_per_round = args.num_queries_per_round
 
-    def run(self, landscape, starting_sequence, model, explorer):
+    def run(self, landscape, starting_sequence, model, explorer,name,runs):
+        np.random.seed(runs)
         self.results = pd.DataFrame()
         starting_fitness = landscape.get_fitness([starting_sequence])[0]
         _, _, _= self.update_results(0, [starting_sequence], [starting_fitness])
@@ -38,7 +39,7 @@ class Runner:
                 "scoremax":score_maxs,
                 "run_time":rts
             })
-            result.to_csv('train_log.csv',index=False)
+            result.to_csv(f"expresult_AAV/trainlog_{name}_{runs}.csv",index=False)
             
             
     def update_results(self, round, sequences, true_scores, running_time=0.0):
