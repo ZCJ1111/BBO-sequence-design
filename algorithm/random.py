@@ -1,6 +1,6 @@
 """Defines the Random explorer class."""
 from typing import Optional, Tuple
-
+import random
 import numpy as np
 import pandas as pd
 from . import register_algorithm
@@ -21,16 +21,12 @@ class Random(flexs.Explorer):
 
     def __init__(
         self,
+        args,
         model: flexs.Model,
-        rounds: int,
-        starting_sequence: str,
-        sequences_batch_size: int,
-        model_queries_per_batch: int,
+        # model,
         alphabet: str,
-        mu: float = 1,
-        elitist: bool = False,
-        seed: Optional[int] = None,
-        log_file: Optional[str] = None,
+        starting_sequence: str,
+ 
     ):
         """
         Create a random search explorer.
@@ -44,22 +40,28 @@ class Random(flexs.Explorer):
             seed: Integer seed for random number generator.
 
         """
+        mu=float(1)
         name = f"Random_mu={mu}"
 
-        super().__init__(
-            model,
-            name,
-            rounds,
-            sequences_batch_size,
-            model_queries_per_batch,
-            starting_sequence,
-            log_file,
-        )
-        self.mu = mu
-        self.rng = np.random.default_rng(seed)
+        # super().__init__(
+        #     model,
+        #     name,
+        #     # rounds,
+        #     # sequences_batch_size,
+        #     # model_queries_per_batch,
+        #     starting_sequence,
+        #     # log_file,
+        # )
+        self.seed=random.randint(0, 10),
+        self.model=model
+        self.mu=mu
+        self.rng = np.random.default_rng(self.seed)
         self.alphabet = alphabet
-        self.elitist = elitist
-
+        self.elitist = False
+        self.model_queries_per_batch=args.num_model_queries_per_round
+        self.sequences_batch_size=args.batch_size
+        self.rounds=args.num_queries_per_round
+        
     def propose_sequences(
         self, measured_sequences: pd.DataFrame
     ) -> Tuple[np.ndarray, np.ndarray]:
@@ -84,5 +86,6 @@ class Random(flexs.Explorer):
             idxs = np.argsort(preds)[: -self.sequences_batch_size : -1]
         else:
             idxs = self.rng.integers(0, len(new_seqs), size=self.sequences_batch_size)
-
-        return new_seqs[idxs], preds[idxs]
+        # import random
+        # idxs= random.sample(idxs,self.rounds)
+        return new_seqs[idxs[0:self.rounds]], preds[idxs]
