@@ -14,12 +14,11 @@ from flexs.utils.sequence_utils import (
     string_to_one_hot,
 )
 
-@register_algorithm("bo")
+@register_algorithm("botorch")
 
 class BO(flexs.Explorer):
     """
     Evolutionary Bayesian Optimization (Evo_BO) explorer.
-
     Algorithm works as follows:
         for N experiment rounds
             recombine samples from previous batch if it exists and measure them,
@@ -36,15 +35,8 @@ class BO(flexs.Explorer):
         self,
         args,
         model: flexs.Model,
-        # model,
         alphabet: str,
         starting_sequence: str,
-        # rounds: int,
-        # sequences_batch_size: int,
-        # model_queries_per_batch: int,
-        # log_file: Optional[str] = None,
-        # method: str = "EI",
-        # recomb_rate: float = 0
     ):
         """
         Args:
@@ -56,29 +48,15 @@ class BO(flexs.Explorer):
         """
         method="EI"
         name = f"BO_method={method}"
-        # if not isinstance(model, flexs.Ensemble):
-        #     print('model',vars(model))
-
-        #     model = flexs.Ensemble([model], combine_with=lambda x: x)
- 
-        # super().__init__(
-        #     model,
-        #     name,
-        #     rounds,
-        #     sequences_batch_size,
-        #     model_queries_per_batch,
-        #     starting_sequence,
-        #     log_file,
-        # )
         self.name=name
         self.starting_sequence=starting_sequence
-        self.sequences_batch_size=args.batch_size
-        self.rounds=args.num_queries_per_round
+        self.sequences_batch_size=args.num_queries_per_round
+        self.rounds=args.num_rounds
         self.model_queries_per_batch=args.num_model_queries_per_round
         self.model=model
         self.alphabet = alphabet
-        self.method = "EI"
-        self.recomb_rate = 0
+        self.method = "UCB"
+        self.recomb_rate = 0.2
         self.best_fitness = 0
         self.num_actions = 0
         self.state = None
@@ -136,14 +114,16 @@ class BO(flexs.Explorer):
 
     def EI(self, vals):
         """Compute expected improvement."""
+        # print('vals',vals)
         # return np.mean([max(val - self.best_fitness, 0) for val in vals])
         return np.mean([max(vals - self.best_fitness, 0)])
 
     @staticmethod
-    def UCB(vals):
+    def UCB(vals,mean_pre,std_pre):
         """Upper confidence bound."""
         discount = 0.01
-        return np.mean(vals) - discount * np.std(vals)
+        
+        return np.mean(vals)+ mean_pre - discount * np.std(std_pre)
 
     def sample_actions(self):
         """Sample actions resulting in sequences to screen."""
@@ -180,12 +160,31 @@ class BO(flexs.Explorer):
             actions_to_screen.append(x)
             state_to_screen = construct_mutant_from_sample(x, state)
             states_to_screen.append(one_hot_to_string(state_to_screen, self.alphabet))
+            
         ensemble_preds = self.model.get_fitness(states_to_screen)
+        mean_pred=np.mean(ensemble_preds)
+        std_pre=np.std(ensemble_preds)
+
         method_pred = (
             [self.EI(vals) for vals in ensemble_preds]
             if self.method == "EI"
-            else [self.UCB(vals) for vals in ensemble_preds]
+            else [self.UCB(vals,mean_pred,std_pre) for vals in ensemble_preds]
+
         )
+        import random
+        a=random.uniform(0,1)
+        a_=[a]*len(method_pred)
+        lists_of_lists = [method_pred, a_]
+        method_pred=[sum(x) for x in zip(*lists_of_lists)]
+        epsilon=0.99
+
+        if a<=epsilon:
+            action_ind = np.argmax(method_pred)
+        else:
+            action_ind = np.random.randint(len(method_pred))
+        
+        # print('action id',action_ind)
+        
         action_ind = np.argmax(method_pred)
         uncertainty = np.std(method_pred[action_ind])
         action = actions_to_screen[action_ind]
