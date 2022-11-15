@@ -19,7 +19,7 @@ from flexs.utils.sequence_utils import (
 
 class BO(flexs.Explorer):
     """
-    Evolutionary Bayesian Optimization (Evo_BO) explorer.
+    Batch Bayesian Optimization (Batch_BO) explorer.
     Algorithm works as follows:
         for N experiment rounds
             recombine samples from previous batch if it exists and measure them,
@@ -57,7 +57,7 @@ class BO(flexs.Explorer):
         self.model=model
         self.alphabet = alphabet
         self.method = "UCB"
-        self.recomb_rate = 0
+        self.recomb_rate = 0.2
         self.best_fitness = 0
         self.num_actions = 0
         self.state = None
