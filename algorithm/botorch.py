@@ -5,7 +5,7 @@ from . import register_algorithm
 import numpy as np
 import pandas as pd
 import flexs
-
+import random
 from flexs.utils.replay_buffers import PrioritizedReplayBuffer
 from flexs.utils.sequence_utils import (
     construct_mutant_from_sample,
@@ -201,7 +201,7 @@ class BO(flexs.Explorer):
     @staticmethod
     def Thompson_sample(measured_batch):
         """Pick a sequence via Thompson sampling."""
-        fitnesses = np.cumsum([np.exp(10 * x[0]) for x in measured_batch])
+        fitnesses = np.cumsum([np.exp(1 * x[0]) for x in measured_batch]) ##make it small inorder to avoid inf, previously it was 10*x[0]
         fitnesses = fitnesses / fitnesses[-1]
         x = np.random.uniform()
         index = bisect_left(fitnesses, x)
@@ -267,6 +267,6 @@ class BO(flexs.Explorer):
         # print('pred',preds)
         # train ensemble model before returning samples
         self.train_models()
-        import random
-        samples= random.sample(samples,self.rounds)
+
+        samples= random.sample(samples,min(self.rounds,len(samples))) ## to avoid out of boundary
         return samples, preds
