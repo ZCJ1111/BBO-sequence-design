@@ -2,7 +2,7 @@ import random
 import numpy as np
 from . import register_algorithm
 from utils.seq_utils import hamming_distance, random_mutation
-from utils.seq_utils import levenshteinDistance, convert_str
+from utils.seq_utils import levenshteinDistance, convert_str,levenshteinDistance_
 
 @register_algorithm("pex")
 class ProximalExploration:
@@ -19,6 +19,7 @@ class ProximalExploration:
         self.batch_size = args.batch_size
         self.num_random_mutations = args.num_random_mutations
         self.frontier_neighbor_size = args.frontier_neighbor_size
+        self.dataset_range=args.datasetrange
     
     def propose_sequences(self, measured_sequences):
         # Input:  - measured_sequences: pandas.DataFrame
@@ -36,12 +37,12 @@ class ProximalExploration:
     def _propose_sequences(self, measured_sequences):
         measured_sequence_set = set(measured_sequences['sequence'])
         # Generate random mutations in the first round.
-        names=np.load('/home/tianyu/code/biodrug/absolut/names.npy')
+        names=np.load('/home/tianyu/code/biodrug/unify-length/names.npy')
 
         if len(measured_sequence_set)==1:
             query_batch = []
             while len(query_batch) < self.num_queries_per_round:
-                random_mutant = random_mutation(self.wt_sequence, self.alphabet, self.num_random_mutations)
+                random_mutant = random_mutation(self.wt_sequence, self.alphabet, self.num_random_mutations,range=self.dataset_range)
                 if random_mutant not in measured_sequence_set:
                     query_batch.append(random_mutant)
                     measured_sequence_set.add(random_mutant)
@@ -51,6 +52,7 @@ class ProximalExploration:
         measured_sequence_dict = {}
         for _, data in measured_sequences.iterrows():
             # distance_to_wt = hamming_distance(data['sequence'], self.wt_sequence)
+            print(data['sequence'])
             distance_to_wt = levenshteinDistance(data['sequence'],self.wt_sequence,names)
 
             if distance_to_wt not in measured_sequence_dict.keys():
@@ -71,7 +73,7 @@ class ProximalExploration:
         # An implementation heuristics: only mutating sequences near the proximal frontier.
         candidate_pool = []
         while len(candidate_pool) < self.num_model_queries_per_round:
-            candidate_sequence = random_mutation(random.choice(frontier_neighbors)['sequence'], self.alphabet, self.num_random_mutations)
+            candidate_sequence = random_mutation(random.choice(frontier_neighbors)['sequence'], self.alphabet, self.num_random_mutations,range=self.dataset_range)
             if candidate_sequence not in measured_sequence_set:
                 candidate_pool.append(candidate_sequence)
                 measured_sequence_set.add(candidate_sequence)

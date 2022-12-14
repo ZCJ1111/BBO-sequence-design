@@ -14,7 +14,8 @@ class Ensemble:
         self.cost = 0
     def train(self, sequences, labels):
         for model in self.models:
-            model.train(sequences, labels)
+            loss=model.train(sequences, labels)
+            return loss
 
     def get_fitness(self, sequences):
         # Input:  - sequences:   [batch_size, sequence_length]

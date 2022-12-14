@@ -25,13 +25,13 @@ class TAPE_Landscape:
     def get_fitness(self, sequences):
         # Input:  - sequences:      [query_batch_size, sequence_length]
         # Output: - fitness_scores: [query_batch_size]
-        f=open('/home/tianyu/code/biodrug/absolut/data_new.json')
+        f=open('/home/tianyu/code/biodrug/unify-length/data.json')
         data=json.load(f)
         self.model.eval()
         fitness_scores = []
         for seq in sequences:
             id=int(seq,2)
-            if id<999985: ## if the mutation id is in the dataset then we can acquire the fitness
+            if id<104541: ## if the mutation id is in the dataset then we can acquire the fitness
                 name=list(data.keys())[id]
                 energy=-data[name][0]
             else:

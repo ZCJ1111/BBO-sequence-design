@@ -10,7 +10,7 @@ import flexs
 def get_args():
     parser = get_arg_parser()
     
-    parser.add_argument('--device', help='device', type=str, default='cuda')
+    parser.add_argument('--device', help='device', type=str, default='cpu')
     
     # landscape arguments
     parser.add_argument('--task', help='fitness landscape', type=str, default='esm1b', choices=task_collection.keys())
@@ -20,9 +20,11 @@ def get_args():
     parser.add_argument('--alg', help='exploration algorithm', type=str, default='pex', choices=algorithm_collection.keys())
     parser.add_argument('--name', help='algorithm name', type=str, default='pexmufac')
     parser.add_argument('--runs', help='random runs tag', type=np.int, default=1)
+    parser.add_argument('--datasetrange', help='bound of dataset', type=np.int, default=104541)
+    parser.add_argument('--gplayer', help='add gplayer or not',  default=False, action='store_true')
 
     parser.add_argument('--num_rounds', help='number of query rounds', type=np.int32, default=100) ##rounds have to be smaller or equal than samples
-    parser.add_argument('--num_queries_per_round', help='number of black-box queries per round', type=np.int32, default=1000)
+    parser.add_argument('--num_queries_per_round', help='number of black-box queries per round', type=np.int32, default=100)
     parser.add_argument('--num_model_queries_per_round', help='number of model predictions per round', type=np.int32, default=2000)
     
     # model arguments

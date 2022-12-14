@@ -16,7 +16,7 @@ class Runner:
         self.num_queries_per_round = args.num_queries_per_round
 
     def run(self, landscape, starting_sequence, model, explorer,name,runs,task):
-        names=np.load('/home/tianyu/code/biodrug/absolut/names.npy')
+        names=np.load('/home/tianyu/code/biodrug/unify-length/names.npy')
 
         np.random.seed(runs)
         self.results = pd.DataFrame()
@@ -25,6 +25,7 @@ class Runner:
         rounds_=[]
         score_maxs=[]
         mutation=[]
+        mutation_counts=[]
         rts=[]
         searched_seq_=[]
         loss_=[]
@@ -34,7 +35,7 @@ class Runner:
             loss= model.train(self.sequence_buffer, self.fitness_buffer)
             print('loss',loss)
             loss_.append(loss)
-            np.save('loss.npy',loss_)
+            # np.save('loss100custom.npy',loss_)
             ## inference all sequence?
             # print('result',self.results)
             sequences, model_scores = explorer.propose_sequences(self.results)
@@ -46,13 +47,16 @@ class Runner:
 
             true_scores = landscape.get_fitness(sequences)
             # print('len true_score',len(true_scores))
-            for i in range(len(sequences)):   
-                mutation.append(hamming_distance(starting_sequence,sequences[i]))
+            for i in range(len(sequences)): 
+                # print('starting seq',convert_str(starting_sequence,names))
+                # print('seq',convert_str(sequences[i],names))  
+                mutation.append(hamming_distance(convert_str(starting_sequence,names),convert_str(sequences[i],names)))
                 # edit_dist=levenshteinDistance(starting_sequence,sequences[i],names)
                 # mutation.append(edit_dist)
 
             round_running_time = time.time()-round_start_time
             roundss, score_max,rt, mutcounts,searched_seq = self.update_results(round, sequences, true_scores, round_running_time,np.average(mutation))
+            mutation_counts.append(mutcounts)
             rounds_.append(roundss)
             score_maxs.append(score_max)
             rts.append(rt)
@@ -61,7 +65,7 @@ class Runner:
                 "round":rounds_,
                 "scoremax":score_maxs,
                 "run_time":rts,
-                'mutcounts':mutcounts,
+                'mutcounts':mutation_counts,
                 "searched_seq":searched_seq_,
 
             })

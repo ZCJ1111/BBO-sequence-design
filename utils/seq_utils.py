@@ -7,13 +7,17 @@ def hamming_distance(seq_1, seq_2):
     return sum([x!=y for x, y in zip(seq_1, seq_2)])
 
 def convert_str(data, name):
-    if len(data)==20:
-        return name[int(data,2)]
-    else:
-        seq=[]
-        for i in range(len(data)):
-            seq.append(name[int(data[i],2)])
-        return seq
+    id=int(data,2)
+    if id>=len(name):
+        id=np.random.randint(len(name))
+    return name[id]
+    # if len(data)==20:
+    #     return name[int(data,2)]
+    # else:
+    #     seq=[]
+    #     for i in range(len(data)):
+    #         seq.append(name[int(data[i],2)])
+    #     return seq
 
 def levenshteinDistance(s1_, s2_,name):
     id1=int(s1_,2)
@@ -38,8 +42,32 @@ def levenshteinDistance(s1_, s2_,name):
             distances = distances_
         return distances[-1]
 
+def levenshteinDistance_(s1_, seq_batch, s2_,name):
+    id1=int(s1_,2)
+    id2=int(s2_,2)
+    # print('seq batch',seq_batch)
+    if id1>=len(name) or id2>=len(name):
+        return 5
+    else:
+        s1=name[id1]
+        s2 = name[id2]
 
-def dec2bin(num,length=19):
+        if len(s1) > len(s2):
+            s1, s2 = s2, s1
+
+        distances = range(len(s1) + 1)
+        for i2, c2 in enumerate(s2):
+            distances_ = [i2+1]
+            for i1, c1 in enumerate(s1):
+                if c1 == c2:
+                    distances_.append(distances[i1])
+                else:
+                    distances_.append(1 + min((distances[i1], distances[i1 + 1], distances_[-1])))
+            distances = distances_
+        return distances[-1]
+
+
+def dec2bin(num,length=16):
     l = []
     while length>=0:
         num, remainder = divmod(num, 2)
@@ -48,9 +76,9 @@ def dec2bin(num,length=19):
     
     return ''.join(l[::-1])
 
-def random_mutation(sequence, alphabet, num_mutations):
+def random_mutation(sequence, alphabet, num_mutations,range):
 
-    idx=np.random.randint(999984)
+    idx=np.random.randint(range)
     return dec2bin(idx)
 
 def random_mutation_(sequence, alphabet, num_mutations): ##origional mutation function
