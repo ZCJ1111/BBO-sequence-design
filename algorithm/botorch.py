@@ -7,27 +7,26 @@ import flexs
 import numpy as np
 import pandas as pd
 from flexs.utils.replay_buffers import PrioritizedReplayBuffer
-from flexs.utils.sequence_utils import (construct_mutant_from_sample,
-                                        generate_random_sequences,
-                                        one_hot_to_string, string_to_one_hot)
+from flexs.utils.sequence_utils import (
+    construct_mutant_from_sample,
+    generate_random_sequences,
+    one_hot_to_string,
+    string_to_one_hot,
+)
 
 from . import register_algorithm
 
 
 @register_algorithm("botorch")
 class BO(flexs.Explorer):
-    """
-    Evolutionary Bayesian Optimization (Evo_BO) explorer.
-    Algorithm works as follows:
-        for N experiment rounds
-            recombine samples from previous batch if it exists and measure them,
-                otherwise skip
-            Thompson sample starting sequence for new batch
-            while less than B samples in batch
-                Generate `model_queries_per_batch/sequences_batch_size` samples
-                If variance of ensemble models is above twice that of the starting
-                    sequence
-                Thompson sample another starting sequence
+    """Evolutionary Bayesian Optimization (Evo_BO) explorer.
+
+    Algorithm works as follows:     for N experiment rounds         recombine samples from previous
+    batch if it exists and measure them,             otherwise skip         Thompson sample
+    starting sequence for new batch         while less than B samples in batch             Generate
+    `model_queries_per_batch/sequences_batch_size` samples             If variance of ensemble
+    models is above twice that of the starting                 sequence             Thompson sample
+    another starting sequence
     """
 
     def __init__(
@@ -168,9 +167,8 @@ class BO(flexs.Explorer):
             if self.method == "EI"
             else [self.UCB(vals, mean_pred, std_pre) for vals in ensemble_preds]
         )
-        import random
 
-        a = random.uniform(0, 1)
+        a = np.random.uniform(0, 1)
         a_ = [a] * len(method_pred)
         lists_of_lists = [method_pred, a_]
         method_pred = [sum(x) for x in zip(*lists_of_lists)]
@@ -201,7 +199,7 @@ class BO(flexs.Explorer):
         """Pick a sequence via Thompson sampling."""
         fitnesses = np.cumsum(
             [np.exp(1 * x[0]) for x in measured_batch]
-        )  ##make it small inorder to avoid inf, previously it was 10*x[0]
+        )  # make it small inorder to avoid inf, previously it was 10*x[0]
         fitnesses = fitnesses / fitnesses[-1]
         x = np.random.uniform()
         index = bisect_left(fitnesses, x)
@@ -269,5 +267,5 @@ class BO(flexs.Explorer):
 
         samples = random.sample(
             samples, min(self.rounds, len(samples))
-        )  ## to avoid out of boundary
+        )  # to avoid out of boundary
         return samples, preds

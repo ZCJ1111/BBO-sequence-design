@@ -1,19 +1,19 @@
-import random
-
 import numpy as np
 
-from utils.seq_utils import (convert_str, hamming_distance,
-                             levenshteinDistance, levenshteinDistance_,
-                             random_mutation)
+from utils.seq_utils import (
+    convert_str,
+    hamming_distance,
+    levenshteinDistance,
+    levenshteinDistance_,
+    random_mutation,
+)
 
 from . import register_algorithm
 
 
 @register_algorithm("pex")
 class ProximalExploration:
-    """
-    Proximal Exploration (PEX)
-    """
+    """Proximal Exploration (PEX)"""
 
     def __init__(self, args, model, alphabet, starting_sequence):
         self.model = model
@@ -81,12 +81,12 @@ class ProximalExploration:
                     frontier_neighbors.append(data)
             frontier_height = max(frontier_height, data_list[0]["true_score"])
 
-        # Construct the candiate pool by randomly mutating the sequences. (line 2 of Algorithm 2 in the paper)
+        # Construct the candidate pool by randomly mutating the sequences. (line 2 of Algorithm 2 in the paper)
         # An implementation heuristics: only mutating sequences near the proximal frontier.
         candidate_pool = []
         while len(candidate_pool) < self.num_model_queries_per_round:
             candidate_sequence = random_mutation(
-                random.choice(frontier_neighbors)["sequence"],
+                np.random.choice(frontier_neighbors)["sequence"],
                 self.alphabet,
                 self.num_random_mutations,
                 range=self.dataset_range,
@@ -100,7 +100,7 @@ class ProximalExploration:
             candidate_batch = candidate_pool[i : i + self.batch_size]
             model_scores = self.model.get_fitness(
                 candidate_batch
-            )  ## get model scores for all the batch of data
+            )  # get model scores for all the batch of data
             for candidate, model_score in zip(candidate_batch, model_scores):
                 # distance_to_wt = hamming_distance(candidate, self.wt_sequence)
                 distance_to_wt = levenshteinDistance(candidate, self.wt_sequence, names)

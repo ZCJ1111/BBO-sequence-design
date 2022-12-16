@@ -8,8 +8,8 @@ from utils.seq_utils import convert_str, hamming_distance, levenshteinDistance
 
 
 class Runner:
-    """
-    The interface of landscape/model/explorer is compatible with FLEXS benchmark.
+    """The interface of landscape/model/explorer is compatible with FLEXS benchmark.
+
     - Fitness Landscape EXploration Sandbox (FLEXS)
       https://github.com/samsinai/FLEXS
     """
@@ -39,7 +39,7 @@ class Runner:
             print("loss", loss)
             loss_.append(loss)
             # np.save('loss100custom.npy',loss_)
-            ## inference all sequence?
+            # inference all sequence?
             # print('result',self.results)
             sequences, model_scores = explorer.propose_sequences(self.results)
             # sequences=['CARVPRAYYYDSSGPNNDYW','CARVPRAYYYDSSGPNNDYW']

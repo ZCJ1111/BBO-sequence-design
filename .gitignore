@@ -1,4 +1,5 @@
 landscape_params/
+.vscode/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

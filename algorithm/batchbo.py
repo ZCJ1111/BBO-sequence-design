@@ -7,27 +7,26 @@ import flexs
 import numpy as np
 import pandas as pd
 from flexs.utils.replay_buffers import PrioritizedReplayBuffer
-from flexs.utils.sequence_utils import (construct_mutant_from_sample,
-                                        generate_random_sequences,
-                                        one_hot_to_string, string_to_one_hot)
+from flexs.utils.sequence_utils import (
+    construct_mutant_from_sample,
+    generate_random_sequences,
+    one_hot_to_string,
+    string_to_one_hot,
+)
 
 from . import register_algorithm
 
 
 @register_algorithm("batchbo")
 class BO(flexs.Explorer):
-    """
-    Batch Bayesian Optimization (Batch_BO) explorer.
-    Algorithm works as follows:
-        for N experiment rounds
-            recombine samples from previous batch if it exists and measure them,
-                otherwise skip
-            Thompson sample starting sequence for new batch
-            while less than B samples in batch
-                Generate `model_queries_per_batch/sequences_batch_size` samples
-                If variance of ensemble models is above twice that of the starting
-                    sequence
-                Thompson sample another starting sequence
+    """Batch Bayesian Optimization (Batch_BO) explorer.
+
+    Algorithm works as follows:     for N experiment rounds         recombine samples from previous
+    batch if it exists and measure them,             otherwise skip         Thompson sample
+    starting sequence for new batch         while less than B samples in batch             Generate
+    `model_queries_per_batch/sequences_batch_size` samples             If variance of ensemble
+    models is above twice that of the starting                 sequence             Thompson sample
+    another starting sequence
     """
 
     def __init__(

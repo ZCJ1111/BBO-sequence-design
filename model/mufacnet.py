@@ -8,9 +8,7 @@ from . import register_model, torch_model
 
 
 class MuFacNet(nn.Module):
-    """
-    Mutation Factorization Network (MuFacNet)
-    """
+    """Mutation Factorization Network (MuFacNet)"""
 
     def __init__(self, input_dim, latent_dim=32, num_filters=32, hidden_dim=128, kernel_size=5):
         super().__init__()

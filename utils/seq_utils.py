@@ -4,7 +4,7 @@ import torch.nn.functional as F
 
 
 def hamming_distance(seq_1, seq_2):
-    return sum([x != y for x, y in zip(seq_1, seq_2)])
+    return sum(x != y for x, y in zip(seq_1, seq_2))
 
 
 def convert_str(data, name):
@@ -71,13 +71,13 @@ def levenshteinDistance_(s1_, seq_batch, s2_, name):
 
 
 def dec2bin(num, length=16):
-    l = []
+    res = []
     while length >= 0:
         num, remainder = divmod(num, 2)
-        l.append(str(remainder))
+        res.append(str(remainder))
         length = length - 1
 
-    return "".join(l[::-1])
+    return "".join(res[::-1])
 
 
 def random_mutation(sequence, alphabet, num_mutations, range):
@@ -86,7 +86,8 @@ def random_mutation(sequence, alphabet, num_mutations, range):
     return dec2bin(idx)
 
 
-def random_mutation_(sequence, alphabet, num_mutations):  ##origional mutation function
+# original mutation function
+def random_mutation_(sequence, alphabet, num_mutations):
     wt_seq = list(sequence)
     for _ in range(num_mutations):
         idx = np.random.randint(len(sequence))

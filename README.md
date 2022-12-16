@@ -24,6 +24,7 @@ git clone https://github.com/HeliXonProtein/proximal-exploration.git
 cd proximal-exploration
 bash download_landscape.sh
 ```
+
 install: https://github.com/samsinai/FLEXS/
 
 ## Usage
@@ -45,4 +46,4 @@ In the default configuration, the protein fitness landscape is simulated by a TA
 
 ## Contact
 
-Please contact zhizhour[at]helixon.com for any questions related to the source code.
+Please contact zhizhour\[at\]helixon.com for any questions related to the source code.

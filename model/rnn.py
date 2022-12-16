@@ -5,8 +5,8 @@ from . import register_model, torch_model
 
 
 class RNN(nn.Module):
-    """
-    The RNN architecture is adopted from the following paper with slight modification:
+    """The RNN architecture is adopted from the following paper with slight modification:
+
     - "Effective Surrogate Models for Protein Design with Bayesian Optimization"
       Nate Gruver, Samuel Stanton, Polina Kirichenko, Marc Finzi, Phillip Maffettone, Vivek Myers, Emily Delaney, Peyton Greenside, Andrew Gordon Wilson
       ICML Workshop on Computational Biology (2021)

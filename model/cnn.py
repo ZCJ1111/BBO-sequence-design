@@ -5,8 +5,8 @@ from . import register_model, torch_model
 
 
 class CNN(nn.Module):
-    """
-    The CNN architecture is adopted from the following paper with slight modification:
+    """The CNN architecture is adopted from the following paper with slight modification:
+
     - "AdaLead: A simple and robust adaptive greedy search algorithm for sequence design"
       Sam Sinai, Richard Wang, Alexander Whatley, Stewart Slocum, Elina Locane, Eric D. Kelsic
       arXiv preprint 2010.02141 (2020)

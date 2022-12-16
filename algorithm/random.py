@@ -1,5 +1,4 @@
 """Defines the Random explorer class."""
-import random
 from typing import Optional, Tuple
 
 import flexs
@@ -30,8 +29,7 @@ class Random(flexs.Explorer):
         alphabet: str,
         starting_sequence: str,
     ):
-        """
-        Create a random search explorer.
+        """Create a random search explorer.
 
         Args:
             mu: Average number of residue mutations from parent for generated sequences.
@@ -40,7 +38,6 @@ class Random(flexs.Explorer):
                 `sequences_batch_size` sequences without taking model score into
                 account (true random search).
             seed: Integer seed for random number generator.
-
         """
         mu = float(1)
         name = f"Random_mu={mu}"
@@ -54,7 +51,7 @@ class Random(flexs.Explorer):
         #     starting_sequence,
         #     # log_file,
         # )
-        self.seed = (random.randint(0, 10),)
+        self.seed = (np.random.randint(0, 10),)
         self.model = model
         self.mu = mu
         self.rng = np.random.default_rng(self.seed)
