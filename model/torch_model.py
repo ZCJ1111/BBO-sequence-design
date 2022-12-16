@@ -1,6 +1,8 @@
-import torch
 import numpy as np
+import torch
+
 from utils.seq_utils import sequences_to_tensor
+
 
 class TorchModel:
     def __init__(self, args, alphabet, net, **kwargs):
@@ -15,18 +17,20 @@ class TorchModel:
         # Input:  - sequences:    [dataset_size, sequence_length]
         #         - labels:       [dataset_size]
         # Output: - loader_train: torch.utils.data.DataLoader
-        
+
         one_hots = sequences_to_tensor(sequences, self.alphabet).float()
         labels = torch.from_numpy(labels).float()
         dataset_train = torch.utils.data.TensorDataset(one_hots, labels)
-        loader_train = torch.utils.data.DataLoader(dataset=dataset_train, batch_size=self.args.batch_size, shuffle=True)
+        loader_train = torch.utils.data.DataLoader(
+            dataset=dataset_train, batch_size=self.args.batch_size, shuffle=True
+        )
         return loader_train
 
     def compute_loss(self, data):
         # Input:  - one_hots: [batch_size, alphabet_size, sequence_length]
         #         - labels:   [batch_size]
         # Output: - loss:     [1]
-        
+
         one_hots, labels = data
         outputs = torch.squeeze(self.net(one_hots.to(self.device)), dim=-1)
         loss = self.loss_func(outputs, labels.to(self.device))
@@ -35,7 +39,7 @@ class TorchModel:
     def train(self, sequences, labels):
         # Input: - sequences: [dataset_size, sequence_length]
         #        - labels:    [dataset_size]
-        
+
         self.net.train()
         loader_train = self.get_data_loader(sequences, labels)
         best_loss, num_no_improvement = np.inf, 0
@@ -53,11 +57,11 @@ class TorchModel:
                 num_no_improvement = 0
             else:
                 num_no_improvement += 1
-    
+
     def get_fitness(self, sequences):
         # Input:  - sequences:   [batch_size, sequence_length]
         # Output: - predictions: [batch_size]
-        
+
         self.net.eval()
         with torch.no_grad():
             one_hots = sequences_to_tensor(sequences, self.alphabet).to(self.device)

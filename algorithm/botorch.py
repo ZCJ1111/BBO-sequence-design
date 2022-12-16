@@ -1,21 +1,20 @@
 """BO explorer."""
+import random
 from bisect import bisect_left
 from typing import Optional, Tuple
-from . import register_algorithm
+
+import flexs
 import numpy as np
 import pandas as pd
-import flexs
-import random
 from flexs.utils.replay_buffers import PrioritizedReplayBuffer
-from flexs.utils.sequence_utils import (
-    construct_mutant_from_sample,
-    generate_random_sequences,
-    one_hot_to_string,
-    string_to_one_hot,
-)
+from flexs.utils.sequence_utils import (construct_mutant_from_sample,
+                                        generate_random_sequences,
+                                        one_hot_to_string, string_to_one_hot)
+
+from . import register_algorithm
+
 
 @register_algorithm("botorch")
-
 class BO(flexs.Explorer):
     """
     Evolutionary Bayesian Optimization (Evo_BO) explorer.
@@ -46,20 +45,20 @@ class BO(flexs.Explorer):
                 BO proposes samples, default 0.
 
         """
-        method="EI"
+        method = "EI"
         name = f"BO_method={method}"
-        self.name=name
-        self.starting_sequence=starting_sequence
-        self.sequences_batch_size=args.num_queries_per_round
-        self.rounds=args.num_rounds
-        self.model_queries_per_batch=args.num_model_queries_per_round
-        self.model=model
+        self.name = name
+        self.starting_sequence = starting_sequence
+        self.sequences_batch_size = args.num_queries_per_round
+        self.rounds = args.num_rounds
+        self.model_queries_per_batch = args.num_model_queries_per_round
+        self.model = model
         self.alphabet = alphabet
         self.method = "UCB"
         self.recomb_rate = 0.2
         self.best_fitness = 0
         self.num_actions = 0
-        self.data_range=args.datasetrange
+        self.data_range = args.datasetrange
         self.state = None
         self.seq_len = None
         self.memory = None
@@ -120,11 +119,11 @@ class BO(flexs.Explorer):
         return np.mean([max(vals - self.best_fitness, 0)])
 
     @staticmethod
-    def UCB(vals,mean_pre,std_pre):
+    def UCB(vals, mean_pre, std_pre):
         """Upper confidence bound."""
         discount = 0.01
-        
-        return np.mean(vals)+ mean_pre - discount * np.std(std_pre)
+
+        return np.mean(vals) + mean_pre - discount * np.std(std_pre)
 
     def sample_actions(self):
         """Sample actions resulting in sequences to screen."""
@@ -140,9 +139,7 @@ class BO(flexs.Explorer):
             action = []
             for pos in range(self.seq_len):
                 if np.random.random() < 1 / self.seq_len:
-                    pos_tuple = pos_changes[pos][
-                        np.random.randint(len(self.alphabet) - 1)
-                    ]
+                    pos_tuple = pos_changes[pos][np.random.randint(len(self.alphabet) - 1)]
                     action.append(pos_tuple)
             if len(action) > 0 and tuple(action) not in actions:
                 actions.add(tuple(action))
@@ -161,31 +158,31 @@ class BO(flexs.Explorer):
             actions_to_screen.append(x)
             state_to_screen = construct_mutant_from_sample(x, state)
             states_to_screen.append(one_hot_to_string(state_to_screen, self.alphabet))
-            
+
         ensemble_preds = self.model.get_fitness(states_to_screen)
-        mean_pred=np.mean(ensemble_preds)
-        std_pre=np.std(ensemble_preds)
+        mean_pred = np.mean(ensemble_preds)
+        std_pre = np.std(ensemble_preds)
 
         method_pred = (
             [self.EI(vals) for vals in ensemble_preds]
             if self.method == "EI"
-            else [self.UCB(vals,mean_pred,std_pre) for vals in ensemble_preds]
-
+            else [self.UCB(vals, mean_pred, std_pre) for vals in ensemble_preds]
         )
         import random
-        a=random.uniform(0,1)
-        a_=[a]*len(method_pred)
-        lists_of_lists = [method_pred, a_]
-        method_pred=[sum(x) for x in zip(*lists_of_lists)]
-        epsilon=0.99
 
-        if a<=epsilon:
+        a = random.uniform(0, 1)
+        a_ = [a] * len(method_pred)
+        lists_of_lists = [method_pred, a_]
+        method_pred = [sum(x) for x in zip(*lists_of_lists)]
+        epsilon = 0.99
+
+        if a <= epsilon:
             action_ind = np.argmax(method_pred)
         else:
             action_ind = np.random.randint(len(method_pred))
-        
+
         # print('action id',action_ind)
-        
+
         action_ind = np.argmax(method_pred)
         uncertainty = np.std(method_pred[action_ind])
         action = actions_to_screen[action_ind]
@@ -202,16 +199,16 @@ class BO(flexs.Explorer):
     @staticmethod
     def Thompson_sample(measured_batch):
         """Pick a sequence via Thompson sampling."""
-        fitnesses = np.cumsum([np.exp(1 * x[0]) for x in measured_batch]) ##make it small inorder to avoid inf, previously it was 10*x[0]
+        fitnesses = np.cumsum(
+            [np.exp(1 * x[0]) for x in measured_batch]
+        )  ##make it small inorder to avoid inf, previously it was 10*x[0]
         fitnesses = fitnesses / fitnesses[-1]
         x = np.random.uniform()
         index = bisect_left(fitnesses, x)
         sequences = [x[1] for x in measured_batch]
         return sequences[index]
 
-    def propose_sequences(
-        self, measured_sequences: pd.DataFrame
-    ) -> Tuple[np.ndarray, np.ndarray]:
+    def propose_sequences(self, measured_sequences: pd.DataFrame) -> Tuple[np.ndarray, np.ndarray]:
         """Propose top `sequences_batch_size` sequences for evaluation."""
         if self.num_actions == 0:
             # indicates model was reset
@@ -219,9 +216,7 @@ class BO(flexs.Explorer):
         else:
             # set state to best measured sequence from prior batch
             last_round_num = measured_sequences["round"].max()
-            last_batch = measured_sequences[
-                measured_sequences["round"] == last_round_num
-            ]
+            last_batch = measured_sequences[measured_sequences["round"] == last_round_num]
             _last_batch_seqs = last_batch["sequence"].tolist()
             _last_batch_true_scores = last_batch["true_score"].tolist()
             last_batch_seqs = _last_batch_seqs
@@ -246,7 +241,7 @@ class BO(flexs.Explorer):
         while self.model.cost - prev_cost < self.model_queries_per_batch:
             uncertainty, new_state_string, _ = self.pick_action(all_measured_seqs)
             all_measured_seqs.add(new_state_string)
-            if int(new_state_string,2)< self.data_range:
+            if int(new_state_string, 2) < self.data_range:
                 # print(int(new_state_string,2))
                 # print(self.data_range)
                 samples.add(new_state_string)
@@ -272,5 +267,7 @@ class BO(flexs.Explorer):
         # train ensemble model before returning samples
         self.train_models()
 
-        samples= random.sample(samples,min(self.rounds,len(samples))) ## to avoid out of boundary
+        samples = random.sample(
+            samples, min(self.rounds, len(samples))
+        )  ## to avoid out of boundary
         return samples, preds

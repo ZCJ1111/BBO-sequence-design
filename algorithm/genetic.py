@@ -1,12 +1,13 @@
 """Define a baseline genetic algorithm implementation."""
 from typing import Optional, Tuple
-from . import register_algorithm
+
+import flexs
 import numpy as np
 import pandas as pd
 import torch
-
-import flexs
 from flexs.utils import sequence_utils as s_utils
+
+from . import register_algorithm
 
 
 @register_algorithm("genetic")
@@ -31,7 +32,7 @@ class GeneticAlgorithm(flexs.Explorer):
         args,
         model: flexs.Model,
         # rounds: int,
-        alphabet:str,
+        alphabet: str,
         starting_sequence: str,
         # sequences_batch_size: int,
         # model_queries_per_batch: int,
@@ -45,14 +46,13 @@ class GeneticAlgorithm(flexs.Explorer):
         # seed: Optional[int] = None,
     ):
         """Create genetic algorithm."""
-        parent_selection_strategy='top-proportion'
-        population_size=20
-        
+        parent_selection_strategy = "top-proportion"
+        population_size = 20
+
         name = (
-            f"GeneticAlgorithm_pop_size={population_size}_"
-            f"parents={parent_selection_strategy}"
+            f"GeneticAlgorithm_pop_size={population_size}_" f"parents={parent_selection_strategy}"
         )
-        beta=0.01
+        beta = 0.01
 
         # super().__init__(
         #     model,
@@ -63,28 +63,22 @@ class GeneticAlgorithm(flexs.Explorer):
         #     starting_sequence,
         #     log_file,
         # )
-        self.model_queries_per_batch=args.num_model_queries_per_round
-        self.sequences_batch_size=args.num_queries_per_round
+        self.model_queries_per_batch = args.num_model_queries_per_round
+        self.sequences_batch_size = args.num_queries_per_round
         self.alphabet = alphabet
         self.population_size = 20
-        self.starting_sequence=starting_sequence
-        self.rounds=args.num_rounds
-        self.model=model
-        parent_selection_proportion=0.3
+        self.starting_sequence = starting_sequence
+        self.rounds = args.num_rounds
+        self.model = model
+        parent_selection_proportion = 0.3
         # Validate parent_selection_strategy
         valid_parent_selection_strategies = ["top-proportion", "wright-fisher"]
         if parent_selection_strategy not in valid_parent_selection_strategies:
             raise ValueError(
-                f"parent_selection_strategy must be one of "
-                f"{valid_parent_selection_strategies}"
+                f"parent_selection_strategy must be one of " f"{valid_parent_selection_strategies}"
             )
-        if (
-            parent_selection_strategy == "top-proportion"
-            and parent_selection_proportion is None
-        ):
-            raise ValueError(
-                "if top-proportion, parent_selection_proportion cannot be None"
-            )
+        if parent_selection_strategy == "top-proportion" and parent_selection_proportion is None:
+            raise ValueError("if top-proportion, parent_selection_proportion cannot be None")
         if parent_selection_strategy == "wright-fisher" and beta is None:
             raise ValueError("if wright-fisher, beta cannot be None")
         self.parent_selection_strategy = parent_selection_strategy
@@ -105,9 +99,7 @@ class GeneticAlgorithm(flexs.Explorer):
         probs = torch.Tensor(fitnesses / np.sum(fitnesses))
         return torch.multinomial(probs, num_parents, replacement=True).numpy()
 
-    def propose_sequences(
-        self, measured_sequences: pd.DataFrame
-    ) -> Tuple[np.ndarray, np.ndarray]:
+    def propose_sequences(self, measured_sequences: pd.DataFrame) -> Tuple[np.ndarray, np.ndarray]:
         """Propose top `sequences_batch_size` sequences for evaluation."""
         # Set the torch seed by generating a random integer from the pre-seeded self.rng
         torch.manual_seed(self.rng.integers(-(2**31), 2**31))
@@ -124,10 +116,7 @@ class GeneticAlgorithm(flexs.Explorer):
 
         sequences = {}
         initial_cost = self.model.cost
-        while (
-            self.model.cost - initial_cost + self.population_size
-            < self.model_queries_per_batch
-        ):
+        while self.model.cost - initial_cost + self.population_size < self.model_queries_per_batch:
             # Create "children" by recombining parents selected from population
             # according to self.parent_selection_strategy and
             # self.recombination_strategy
