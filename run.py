@@ -1,7 +1,7 @@
 import numpy as np
 
 from algorithm import algorithm_collection, get_algorithm
-from landscape import get_landscape, landscape_collection, task_collection
+from landscape import get_landscape, landscape_collection, protein_alphabet
 from model import get_model, model_collection
 from model.ensemble import ensemble_rules
 from utils.eval_utils import Runner
@@ -20,7 +20,7 @@ def get_args():
         type=str,
         default="custom",
         dest="landscape",
-        choices=task_collection.keys(),
+        choices=landscape_collection.keys(),
     )
 
     # algorithm arguments
@@ -38,7 +38,7 @@ def get_args():
 
     parser.add_argument(
         "--num_rounds", help="number of query rounds", type=int, default=100
-    )  ##rounds have to be smaller or equal than samples
+    )  # rounds have to be smaller or equal than samples
     parser.add_argument(
         "--num_queries_per_round",
         help="number of black-box queries per round",
@@ -81,6 +81,36 @@ def get_args():
 
     args, _ = parser.parse_known_args()
 
+    # Custom landscape arguments
+    if args.landscape == "custom":
+        parser.add_argument(
+            "--fitness-data",
+            help="CSV file of the sequences and the fitness values",
+            type=str,
+            dest="fitness_data",
+            required=True,
+        )
+        parser.add_argument(
+            "--sequence-column",
+            help="Column in the CSV file with the amino acid sequence",
+            type=str,
+            dest="seq_col",
+            default="CDR3",
+        )
+        parser.add_argument(
+            "--fitness-column",
+            help="Column in the CSV file with fitness values",
+            type=str,
+            dest="fitness_col",
+            default="Energy",
+        )
+        parser.add_argument(
+            "--starting-seq",
+            help="Seed sequence to initiate the search",
+            type=str,
+            dest="starting_sequence",
+        )
+
     # PEX arguments
     if args.alg == "pex":
         parser.add_argument(
@@ -102,15 +132,26 @@ def get_args():
             "--context_radius", help="the radius of context window", type=int, default=10
         )
 
+    if args.net == "esm1b":
+        parser.add_argument(
+            "--torch-hub-cache",
+            help="Cache directory for the ESM model checkpoint",
+            type=str,
+            dest="torch_hub_cache",
+            default="/nfs_beijing_ai/zhouyi/share/pretrained-models",
+        )
+
     args = parser.parse_args()
     return args
 
 
 if __name__ == "__main__":
     args = get_args()
-    print('algorithm is:',args.alg)
-    landscape, alphabet, starting_sequence = get_landscape(args)
-    model = get_model(args, alphabet=alphabet, starting_sequence=starting_sequence)
-    explorer = get_algorithm(args, model=model, alphabet=alphabet, starting_sequence=starting_sequence)
+    print("algorithm is:", args.alg)
+    landscape, starting_sequence = get_landscape(args)
+    model = get_model(args, alphabet=protein_alphabet, starting_sequence=starting_sequence)
+    explorer = get_algorithm(
+        args, model=model, alphabet=protein_alphabet, starting_sequence=starting_sequence
+    )
     runner = Runner(args)
-    runner.run(landscape, starting_sequence, model, explorer, args.name, args.runs,args.task)
+    runner.run(landscape, starting_sequence, model, explorer, args.name, args.runs)
