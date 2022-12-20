@@ -1,5 +1,6 @@
 import numpy as np
 import torch
+from torch.utils.data import DataLoader, TensorDataset
 
 from utils.seq_utils import sequences_to_tensor
 
@@ -20,8 +21,8 @@ class TorchModel:
 
         one_hots = sequences_to_tensor(sequences, self.alphabet).float()
         labels = torch.from_numpy(labels).float()
-        dataset_train = torch.utils.data.TensorDataset(one_hots, labels)
-        loader_train = torch.utils.data.DataLoader(
+        dataset_train = TensorDataset(one_hots, labels)
+        loader_train = DataLoader(
             dataset=dataset_train, batch_size=self.args.batch_size, shuffle=True
         )
         return loader_train
@@ -31,8 +32,8 @@ class TorchModel:
         #         - labels:   [batch_size]
         # Output: - loss:     [1]
 
-        one_hots, labels = data
-        outputs = torch.squeeze(self.net(one_hots.to(self.device)), dim=-1)
+        feats, labels = data
+        outputs = torch.squeeze(self.net(feats.to(self.device)), dim=-1)
         loss = self.loss_func(outputs, labels.to(self.device))
         return loss
 
