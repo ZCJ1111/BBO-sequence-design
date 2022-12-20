@@ -1,44 +1,42 @@
-import os
-import json
-import tape
-import torch
-import numpy as np
+import pandas as pd
+
 from . import register_landscape
 
+
 @register_landscape("custom")
-class TAPE_Landscape:
-    """
-        A TAPE-based oracle model to simulate protein fitness landscape.
-    """
-    
+class CustomLandscape:
+    """Sample sequences from given fitness distributions."""
+
     def __init__(self, args):
-        task_dir_path = os.path.join('./landscape_params/tape_landscape', args.task)
-        assert os.path.exists(os.path.join(task_dir_path, 'pytorch_model.bin'))
-        self.model = tape.ProteinBertForValuePrediction.from_pretrained(task_dir_path)
-        with open(os.path.join(task_dir_path, 'starting_sequence.json')) as f:
-            self.starting_sequence = json.load(f)
-        
-        self.tokenizer = tape.TAPETokenizer(vocab='iupac')
-        self.device = args.device
-        self.model.to(self.device)
+        if not args.fitness_data:
+            raise ValueError("--fitness-data not passed to custom landscape")
+
+        # Read fitness dataset
+        df = pd.read_csv(args.fitness_data)
+        if args.fitness_col not in df.columns:
+            raise ValueError(
+                f"--fitness-column {args.fitness_col} not found in {args.fitness_data}"
+            )
+
+        # Make {sequence: fitness} dict
+        self.fitness_data = (
+            df.filter([args.seq_col, args.fitness_col])
+            .set_index(args.seq_col)
+            .to_dict()[args.fitness_col]
+        )
+
+        # If seed sequence is not given, use a sequence with median fitness
+        self.median_fitness = df[args.fitness_col].median(axis=0)
+        if args.starting_sequence and args.starting_sequence in self.fitness_data:
+            self.starting_sequence = args.starting_sequence
+        else:
+            self.starting_sequence = df.loc[
+                df[args.fitness_col] == self.median_fitness, args.seq_col
+            ].to_numpy()[0]
 
     def get_fitness(self, sequences):
         # Input:  - sequences:      [query_batch_size, sequence_length]
         # Output: - fitness_scores: [query_batch_size]
-        f=open('/home/tianyu/code/biodrug/unify-length/data.json')
-        data=json.load(f)
-        self.model.eval()
-        fitness_scores = []
-        for seq in sequences:
-            id=int(seq,2)
-            if id<104541: ## if the mutation id is in the dataset then we can acquire the fitness
-                name=list(data.keys())[id]
-                energy=-data[name][0]
-            else:
-                energy=-81.35
-            # energy=-data[seq][0]
-            # print('input',inputs)
-            # fitness_scores.append(self.model(inputs.to(self.device))[0].item())
-            fitness_scores.append(energy)
-            
+        fitness_scores = [self.fitness_data.get(seq, self.median_fitness) for seq in sequences]
+
         return fitness_scores
