@@ -26,13 +26,13 @@ class ProximalExploration:
         self.frontier_neighbor_size = args.frontier_neighbor_size
         self.dataset_range = args.datasetrange
 
-    def propose_sequences(self, measured_sequences):
+    def propose_sequences(self, measured_sequences, **kwargs):
         # Input:  - measured_sequences: pandas.DataFrame
         #           - 'sequence':       [sequence_length]
         #           - 'true_score':     float
         # Output: - query_batch:        [num_queries, sequence_length]
         #         - model_scores:       [num_queries]
-        query_batch = self._propose_sequences(measured_sequences)
+        query_batch = self._propose_sequences(measured_sequences, **kwargs)
         model_scores = np.concatenate(
             [
                 self.model.get_fitness(query_batch[i : i + self.batch_size])
@@ -41,10 +41,10 @@ class ProximalExploration:
         )
         return query_batch, model_scores
 
-    def _propose_sequences(self, measured_sequences):
+    def _propose_sequences(self, measured_sequences, **kwargs):
         measured_sequence_set = set(measured_sequences["sequence"])
         # Generate random mutations in the first round.
-        names = np.load("/home/tianyu/code/biodrug/unify-length/names.npy")
+        names = kwargs["names"]
 
         if len(measured_sequence_set) == 1:
             query_batch = []

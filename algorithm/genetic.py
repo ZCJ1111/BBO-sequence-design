@@ -99,7 +99,9 @@ class GeneticAlgorithm(flexs.Explorer):
         probs = torch.Tensor(fitnesses / np.sum(fitnesses))
         return torch.multinomial(probs, num_parents, replacement=True).numpy()
 
-    def propose_sequences(self, measured_sequences: pd.DataFrame) -> Tuple[np.ndarray, np.ndarray]:
+    def propose_sequences(
+        self, measured_sequences: pd.DataFrame, **kwargs
+    ) -> Tuple[np.ndarray, np.ndarray]:
         """Propose top `sequences_batch_size` sequences for evaluation."""
         # Set the torch seed by generating a random integer from the pre-seeded self.rng
         torch.manual_seed(self.rng.integers(-(2**31), 2**31))

@@ -61,7 +61,9 @@ class Random(flexs.Explorer):
         self.sequences_batch_size = args.batch_size
         self.rounds = args.num_queries_per_round
 
-    def propose_sequences(self, measured_sequences: pd.DataFrame) -> Tuple[np.ndarray, np.ndarray]:
+    def propose_sequences(
+        self, measured_sequences: pd.DataFrame, **kwargs
+    ) -> Tuple[np.ndarray, np.ndarray]:
         """Propose top `sequences_batch_size` sequences for evaluation."""
         old_sequences = measured_sequences["sequence"]
         old_sequence_set = set(old_sequences)

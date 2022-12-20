@@ -18,8 +18,9 @@ class Runner:
         self.num_rounds = args.num_rounds
         self.num_queries_per_round = args.num_queries_per_round
 
-    def run(self, landscape, starting_sequence, model, explorer, name, runs, task):
-        names = np.load("/home/tianyu/code/biodrug/unify-length/names.npy")
+    def run(self, landscape, starting_sequence, model, explorer, name, runs):
+        # names = np.load("/home/tianyu/code/biodrug/unify-length/names.npy")
+        names = list(landscape.fitness_data.keys())
 
         np.random.seed(runs)
         self.results = pd.DataFrame()
@@ -41,7 +42,7 @@ class Runner:
             # np.save('loss100custom.npy',loss_)
             # inference all sequence?
             # print('result',self.results)
-            sequences, model_scores = explorer.propose_sequences(self.results)
+            sequences, model_scores = explorer.propose_sequences(self.results, names=names)
             # sequences=['CARVPRAYYYDSSGPNNDYW','CARVPRAYYYDSSGPNNDYW']
             # print('seq',sequences)
             # print('start seq',starting_sequence)
@@ -79,7 +80,7 @@ class Runner:
                     "searched_seq": searched_seq_,
                 }
             )
-            result.to_csv(f"expresult_{task}/trainlog_{name}_{runs}.csv", index=False)
+            result.to_csv(f"expresult/trainlog_{name}_{runs}.csv", index=False)
 
     def update_results(self, round, sequences, true_scores, mutcounts, running_time=0.0):
         self.results = self.results.append(

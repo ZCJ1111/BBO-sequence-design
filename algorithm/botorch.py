@@ -206,7 +206,9 @@ class BO(flexs.Explorer):
         sequences = [x[1] for x in measured_batch]
         return sequences[index]
 
-    def propose_sequences(self, measured_sequences: pd.DataFrame) -> Tuple[np.ndarray, np.ndarray]:
+    def propose_sequences(
+        self, measured_sequences: pd.DataFrame, **kwargs
+    ) -> Tuple[np.ndarray, np.ndarray]:
         """Propose top `sequences_batch_size` sequences for evaluation."""
         if self.num_actions == 0:
             # indicates model was reset
