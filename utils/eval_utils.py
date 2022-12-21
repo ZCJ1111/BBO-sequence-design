@@ -4,7 +4,7 @@ import time
 import numpy as np
 import pandas as pd
 
-from utils.seq_utils import convert_str, hamming_distance, levenshteinDistance
+from utils.seq_utils import levenshtein_distance
 
 
 class Runner:
@@ -28,7 +28,7 @@ class Runner:
         _, _, _, _, _ = self.update_results(0, [starting_sequence], [starting_fitness], 0)
         rounds_ = []
         score_maxs = []
-        mutation = []
+        mutation: list[int] = []
         mutation_counts = []
         rts = []
         searched_seq_ = []
@@ -36,13 +36,16 @@ class Runner:
         for round in range(1, self.num_rounds + 1):
             round_start_time = time.time()
 
-            loss = model.train(self.sequence_buffer, self.fitness_buffer)
-            print("loss", loss)
-            loss_.append(loss)
+            if len(self.sequence_buffer) > 1:
+                print(f"Training model in round {round}")
+                loss = model.train(self.sequence_buffer, self.fitness_buffer)
+                print("loss", loss)
+                loss_.append(loss)
             # np.save('loss100custom.npy',loss_)
             # inference all sequence?
             # print('result',self.results)
-            sequences, model_scores = explorer.propose_sequences(self.results, names=names)
+            print(f"Proposing sequences in round {round}")
+            sequences, _ = explorer.propose_sequences(self.results, all_seqs=names)
             # sequences=['CARVPRAYYYDSSGPNNDYW','CARVPRAYYYDSSGPNNDYW']
             # print('seq',sequences)
             # print('start seq',starting_sequence)
@@ -51,20 +54,13 @@ class Runner:
 
             true_scores = landscape.get_fitness(sequences)
             # print('len true_score',len(true_scores))
-            for i in range(len(sequences)):
-                # print('starting seq',convert_str(starting_sequence,names))
-                # print('seq',convert_str(sequences[i],names))
-                mutation.append(
-                    hamming_distance(
-                        convert_str(starting_sequence, names), convert_str(sequences[i], names)
-                    )
-                )
-                # edit_dist=levenshteinDistance(starting_sequence,sequences[i],names)
-                # mutation.append(edit_dist)
+
+            for seq in sequences:
+                mutation.append(levenshtein_distance(s1=starting_sequence, s2=seq))
 
             round_running_time = time.time() - round_start_time
             roundss, score_max, rt, mutcounts, searched_seq = self.update_results(
-                round, sequences, true_scores, round_running_time, np.average(mutation)
+                round, sequences, true_scores, np.average(mutation), round_running_time
             )
             mutation_counts.append(mutcounts)
             rounds_.append(roundss)
@@ -82,7 +78,14 @@ class Runner:
             )
             result.to_csv(f"expresult/trainlog_{name}_{runs}.csv", index=False)
 
-    def update_results(self, round, sequences, true_scores, mutcounts, running_time=0.0):
+    def update_results(
+        self,
+        round: int,
+        sequences: list[str],
+        true_scores: list[float],
+        mutcounts: float,
+        running_time: float = 0.0,
+    ):
         self.results = self.results.append(
             pd.DataFrame(
                 {

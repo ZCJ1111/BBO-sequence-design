@@ -1,6 +1,7 @@
 import numpy as np
 import torch
 from torch.utils.data import DataLoader, TensorDataset
+from tqdm import tqdm
 
 from utils.seq_utils import sequences_to_tensor
 
@@ -9,7 +10,7 @@ class TorchModel:
     def __init__(self, args, alphabet, net, **kwargs):
         self.args = args
         self.alphabet = alphabet
-        self.device = self.device = args.device
+        self.device = args.device
         self.net = net.to(self.device)
         self.optimizer = torch.optim.Adam(net.parameters(), lr=args.lr)
         self.loss_func = torch.nn.MSELoss()
@@ -44,9 +45,10 @@ class TorchModel:
         self.net.train()
         loader_train = self.get_data_loader(sequences, labels)
         best_loss, num_no_improvement = np.inf, 0
+        epoch_num = 1
         while num_no_improvement < self.args.patience:
             loss_List = []
-            for data in loader_train:
+            for data in tqdm(loader_train, desc=f"epoch{epoch_num}"):
                 loss = self.compute_loss(data)
                 loss_List.append(loss.item())
                 self.optimizer.zero_grad()
@@ -58,6 +60,9 @@ class TorchModel:
                 num_no_improvement = 0
             else:
                 num_no_improvement += 1
+            epoch_num += 1
+
+        return best_loss
 
     def get_fitness(self, sequences):
         # Input:  - sequences:   [batch_size, sequence_length]
