@@ -1,6 +1,9 @@
+from functools import cache
+
 import numpy as np
 import torch
 import torch.nn.functional as F
+from Levenshtein import distance
 
 
 def hamming_distance(seq_1, seq_2):
@@ -19,6 +22,11 @@ def convert_str(data, name):
     #     for i in range(len(data)):
     #         seq.append(name[int(data[i],2)])
     #     return seq
+
+
+@cache
+def levenshtein_distance(s1, s2):
+    return distance(s1, s2)
 
 
 def levenshteinDistance(s1_, s2_, name):
@@ -80,7 +88,13 @@ def dec2bin(num, length=16):
     return "".join(res[::-1])
 
 
-def random_mutation(sequence, alphabet, num_mutations, range):
+def sample_new_seqs(all_seqs, observed_seqs, num_samples: int, rng: np.random.Generator):
+    candidate_pool = list(set(all_seqs) - set(observed_seqs))
+    proposed_seqs = rng.choice(candidate_pool, size=num_samples, replace=False)
+    return proposed_seqs
+
+
+def random_mutation(range):
 
     idx = np.random.randint(range)
     return dec2bin(idx)
