@@ -33,6 +33,9 @@ class ESM1bAttention1d(nn.Module):
         self.encoder, self.alphabet = torch.hub.load(
             "facebookresearch/esm:main", "esm2_t33_650M_UR50D"
         )
+        for param in self.encoder.parameters():
+            param.requires_grad = False
+
         self.tokenizer = self.alphabet.get_batch_converter()
         self.decoder = Decoder()
 
@@ -71,6 +74,6 @@ class ESM1bModel(torch_model.TorchModel):
             data = [(i, seq) for i, seq in enumerate(sequences)]
             *_, batch_tokens = self.net.tokenizer(data)
             batch_tokens = batch_tokens.to(self.device)
-            predictions = self.net(batch_tokens).cpu().numpy()
+            predictions = self.net(batch_tokens).cpu().detach().numpy()
         predictions = np.squeeze(predictions, axis=-1)
         return predictions
