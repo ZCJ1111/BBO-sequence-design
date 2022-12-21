@@ -63,6 +63,13 @@ def get_args():
     parser.add_argument("--lr", help="learning rate", type=np.float32, default=1e-3)
     parser.add_argument("--batch_size", help="batch size", type=int, default=256)
     parser.add_argument(
+        "--max-epochs",
+        help="Stop training after this limit",
+        type=int,
+        default=100,
+        dest="max_epochs",
+    )
+    parser.add_argument(
         "--patience",
         help="number of epochs without improvement to wait before terminating training",
         type=int,

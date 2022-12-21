@@ -46,7 +46,7 @@ class TorchModel:
         loader_train = self.get_data_loader(sequences, labels)
         best_loss, num_no_improvement = np.inf, 0
         epoch_num = 1
-        while num_no_improvement < self.args.patience:
+        while (num_no_improvement < self.args.patience) and (epoch_num < self.args.max_epochs):
             loss_List = []
             for data in tqdm(loader_train, desc=f"epoch{epoch_num}"):
                 loss = self.compute_loss(data)
