@@ -110,6 +110,12 @@ def get_args():
             type=str,
             dest="starting_sequence",
         )
+        parser.add_argument(
+            "--invert-score",
+            help="Use this flag if the score should be minimized",
+            action="store_true",
+            dest="invert_score",
+        )
 
     # PEX arguments
     if args.alg == "pex":

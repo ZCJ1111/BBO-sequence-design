@@ -17,6 +17,8 @@ class CustomLandscape:
             raise ValueError(
                 f"--fitness-column {args.fitness_col} not found in {args.fitness_data}"
             )
+        if args.invert_score:
+            df[args.fitness_col] = -df[args.fitness_col]
 
         # Make {sequence: fitness} dict
         self.fitness_data = (
