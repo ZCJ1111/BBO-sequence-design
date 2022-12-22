@@ -32,7 +32,7 @@ class Runner:
         mutation_counts = []
         rts = []
         searched_seq_ = []
-        loss_ = []
+        loss_ = [None]
         for round in range(1, self.num_rounds + 1):
             round_start_time = time.time()
 
@@ -73,6 +73,7 @@ class Runner:
                     "scoremax": score_maxs,
                     "run_time": rts,
                     "mutcounts": mutation_counts,
+                    "loss": loss_,
                     "searched_seq": searched_seq_,
                 }
             )
