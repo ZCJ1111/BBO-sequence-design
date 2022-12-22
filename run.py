@@ -15,6 +15,7 @@ def get_args():
     # landscape arguments
     parser.add_argument('--task', help='fitness landscape', type=str, default='esm1b', choices=task_collection.keys())
     parser.add_argument('--oracle_model', help='oracle model of fitness landscape', type=str, default='custom', choices=landscape_collection.keys())
+    parser.add_argument('--custom_data_name', help='which dataset', type=str, default='JHL_A', choices=['ADQ_A','FNS_A','JHL_A'])
 
     # algorithm arguments
     parser.add_argument('--alg', help='exploration algorithm', type=str, default='pex', choices=algorithm_collection.keys())
@@ -24,7 +25,7 @@ def get_args():
     parser.add_argument('--gplayer', help='add gplayer or not',  default=False, action='store_true')
 
     parser.add_argument('--num_rounds', help='number of query rounds', type=np.int32, default=100) ##rounds have to be smaller or equal than samples
-    parser.add_argument('--num_queries_per_round', help='number of black-box queries per round', type=np.int32, default=100)
+    parser.add_argument('--num_queries_per_round', help='number of black-box queries per round', type=np.int32, default=10)
     parser.add_argument('--num_model_queries_per_round', help='number of model predictions per round', type=np.int32, default=2000)
     
     # model arguments
@@ -38,7 +39,7 @@ def get_args():
     args, _ = parser.parse_known_args()
     
     # PEX arguments
-    if args.alg == 'pex':
+    if args.alg == 'pex' or args.alg =='pexcons':
         parser.add_argument('--num_random_mutations', help='number of amino acids to mutate per sequence', type=np.int32, default=2)
         parser.add_argument('--frontier_neighbor_size', help='size of the frontier neighbor', type=np.int32, default=5)
     
@@ -53,6 +54,7 @@ def get_args():
 if __name__=='__main__':
     args = get_args()
     print('algorithm is:',args.alg)
+    print('dataset:',args.custom_data_name)
     landscape, alphabet, starting_sequence = get_landscape(args)
     model = get_model(args, alphabet=alphabet, starting_sequence=starting_sequence)
     explorer = get_algorithm(args, model=model, alphabet=alphabet, starting_sequence=starting_sequence)
