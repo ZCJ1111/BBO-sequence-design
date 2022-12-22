@@ -87,15 +87,20 @@ class Runner:
         mutcounts: float,
         running_time: float = 0.0,
     ):
-        self.results = self.results.append(
-            pd.DataFrame(
-                {
-                    "round": round,
-                    "sequence": sequences,
-                    "true_score": true_scores,
-                    "mutcounts": mutcounts,
-                }
-            )
+        self.results = pd.concat(
+            (
+                self.results,
+                pd.DataFrame(
+                    {
+                        "round": round,
+                        "sequence": sequences,
+                        "true_score": true_scores,
+                        "mutcounts": mutcounts,
+                    }
+                ),
+            ),
+            axis=0,
+            ignore_index=True,
         )
         print(
             "round: {}  max fitness score: {:.3f}  running time: {:.2f} (sec) mutation couts:{:.3f} searched sequence number {}".format(
