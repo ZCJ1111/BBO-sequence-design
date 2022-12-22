@@ -14,14 +14,15 @@ class Runner:
     def __init__(self, args):
         self.num_rounds = args.num_rounds
         self.num_queries_per_round = args.num_queries_per_round
+        self.alg=args.alg
+        self.cutom_data=args.custom_data_name
 
     def run(self, landscape, starting_sequence, model, explorer,name,runs,task):
-        names=np.load('/home/tianyu/code/biodrug/unify-length/names.npy')
-
+        names=np.load(f'/home/tianyu/code/biodrug/unify-length/names_{self.cutom_data}.npy')
         np.random.seed(runs)
         self.results = pd.DataFrame()
         starting_fitness = landscape.get_fitness([starting_sequence])[0]
-        _, _, _,_,_= self.update_results(0, [starting_sequence], [starting_fitness],0)
+        _, _, _,_,_,_= self.update_results(0, [starting_sequence], [starting_fitness],0,0)
         rounds_=[]
         score_maxs=[]
         mutation=[]
@@ -29,16 +30,18 @@ class Runner:
         rts=[]
         searched_seq_=[]
         loss_=[]
+        round_min_seq=starting_sequence
         for round in range(1, self.num_rounds+1):
             round_start_time = time.time()
             
             loss= model.train(self.sequence_buffer, self.fitness_buffer)
-            print('loss',loss)
-            loss_.append(loss)
             # np.save('loss100custom.npy',loss_)
             ## inference all sequence?
             # print('result',self.results)
-            sequences, model_scores = explorer.propose_sequences(self.results)
+            if self.alg == "pexcons":
+                sequences, model_scores = explorer.propose_sequences(self.results,round_min_seq)
+            else:
+                sequences, model_scores = explorer.propose_sequences(self.results)
             # sequences=['CARVPRAYYYDSSGPNNDYW','CARVPRAYYYDSSGPNNDYW']
             # print('seq',sequences)
             # print('start seq',starting_sequence)
@@ -47,42 +50,53 @@ class Runner:
 
             true_scores = landscape.get_fitness(sequences)
             # print('len true_score',len(true_scores))
+            mutation_round=[]
             for i in range(len(sequences)): 
                 # print('starting seq',convert_str(starting_sequence,names))
-                # print('seq',convert_str(sequences[i],names))  
+                # print('seq',convert_str(sequences[i],names)) 
                 mutation.append(hamming_distance(convert_str(starting_sequence,names),convert_str(sequences[i],names)))
+                mutation_round.append(hamming_distance(convert_str(starting_sequence,names),convert_str(sequences[i],names)))
+
+                # print('mutation ',mutation)
+                # mutation.append(levenshteinDistance(starting_sequence,sequences[i],names))
                 # edit_dist=levenshteinDistance(starting_sequence,sequences[i],names)
                 # mutation.append(edit_dist)
+            round_min_seq=sequences[np.argmin(mutation_round)]
 
+            
             round_running_time = time.time()-round_start_time
-            roundss, score_max,rt, mutcounts,searched_seq = self.update_results(round, sequences, true_scores, round_running_time,np.average(mutation))
+            roundss, score_max,rt, mutcounts,searched_seq, losses = self.update_results(round, sequences, true_scores,np.average(mutation), loss,round_running_time)
             mutation_counts.append(mutcounts)
             rounds_.append(roundss)
             score_maxs.append(score_max)
             rts.append(rt)
             searched_seq_.append(searched_seq)
+            loss_.append(losses)
             result=pd.DataFrame({
                 "round":rounds_,
                 "scoremax":score_maxs,
                 "run_time":rts,
                 'mutcounts':mutation_counts,
                 "searched_seq":searched_seq_,
+                "Loss": loss_
+                
 
             })
-            result.to_csv(f"expresult_{task}/trainlog_{name}_{runs}.csv",index=False)
+            result.to_csv(f"expresult_{task}/trainlog_{name}_{runs}_{self.cutom_data}.csv",index=False)
             
             
-    def update_results(self, round, sequences, true_scores, mutcounts, running_time=0.0):
+    def update_results(self, round, sequences, true_scores, mutcounts,loss,running_time=0.0):
         self.results = self.results.append(
             pd.DataFrame({
                 "round": round,
                 "sequence": sequences,
                 "true_score": true_scores,
                 'mutcounts':mutcounts,
+                "loss":loss,
             })
         )
-        print('round: {}  max fitness score: {:.3f}  running time: {:.2f} (sec) mutation couts:{:.3f} searched sequence number {}'.format(round, self.results['true_score'].max(), running_time,mutcounts, len(self.results)))
-        return round, self.results['true_score'].max(), running_time,mutcounts,len(self.results)
+        print('round: {}  max fitness score: {:.3f}  running time: {:.2f} (sec) mutation couts:{:.3f} searched sequence number {} Loss {}'.format(round, self.results['true_score'].max(), running_time,mutcounts, len(self.results), loss))
+        return round, self.results['true_score'].max(), running_time,mutcounts,len(self.results), loss
     
     @property
     def sequence_buffer(self):
