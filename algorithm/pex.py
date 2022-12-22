@@ -43,7 +43,7 @@ class ProximalExploration:
             levenshtein_distance(s1=self.wt_sequence, s2=candidate) for candidate in candidate_pool
         ]
         model_scores = []
-        eval_batch_size = self.batch_size * 8
+        eval_batch_size = self.batch_size
         for i in trange(0, len(candidate_pool), eval_batch_size, desc="Model scores"):
             candidate_batch = candidate_pool[i : i + eval_batch_size]
             batch_model_scores = self.model.get_fitness(candidate_batch)
