@@ -5,6 +5,7 @@ import torch.nn as nn
 import numpy as np
 from sequence_models.structure import Attention1d
 from . import torch_model, register_model
+import gpytorch
 
 class Decoder(nn.Module):
     def __init__(self, input_dim=1280, hidden_dim=512):
@@ -14,6 +15,8 @@ class Decoder(nn.Module):
         self.attention1d = Attention1d(in_dim=hidden_dim)
         self.dense_3 = nn.Linear(hidden_dim, hidden_dim)
         self.dense_4 = nn.Linear(hidden_dim, 1)
+        self.mean_module = gpytorch.means.ConstantMean()
+        self.covar_module = gpytorch.kernels.ScaleKernel(gpytorch.kernels.RBFKernel())
     
     def forward(self, x):
         x = torch.relu(self.dense_1(x))
@@ -21,6 +24,10 @@ class Decoder(nn.Module):
         x = self.attention1d(x)
         x = torch.relu(self.dense_3(x))
         x = self.dense_4(x)
+        mean_x = self.mean_module(x)
+        # print('mean x',mean_x)
+        covar_x = self.covar_module(x)
+        x=gpytorch.distributions.MultivariateNormal(mean_x, covar_x)
         return x
 
 @register_model("esm1b")
