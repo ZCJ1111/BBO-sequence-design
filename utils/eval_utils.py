@@ -1,5 +1,5 @@
-import json
 import time
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -18,9 +18,11 @@ class Runner:
         self.num_rounds = args.num_rounds
         self.num_queries_per_round = args.num_queries_per_round
 
-    def run(self, landscape, starting_sequence, model, explorer, name, runs):
+    def run(self, landscape, starting_sequence, model, explorer, name, runs, out_dir):
         # names = np.load("/home/tianyu/code/biodrug/unify-length/names.npy")
         names = list(landscape.fitness_data.keys())
+        output_dir = Path(out_dir).expanduser().resolve()
+        output_dir.mkdir(exist_ok=True, parents=True)
 
         np.random.seed(runs)
         self.results = pd.DataFrame()
@@ -77,7 +79,7 @@ class Runner:
                     "searched_seq": searched_seq_,
                 }
             )
-            result.to_csv(f"expresult/trainlog_{name}_{runs}.csv", index=False)
+            result.to_csv(output_dir / f"trainlog_{name}_{runs}.csv", index=False)
 
     def update_results(
         self,

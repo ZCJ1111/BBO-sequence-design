@@ -33,6 +33,9 @@ def get_args():
     )
     parser.add_argument("--name", help="algorithm name", type=str, default="pexmufac")
     parser.add_argument("--runs", help="random runs tag", type=int, default=1)
+    parser.add_argument(
+        "--out-dir", help="Output directory", type=str, dest="out_dir", default="./expresult"
+    )
     parser.add_argument("--datasetrange", help="bound of dataset", type=int, default=104541)
     parser.add_argument("--gplayer", help="add gplayer or not", default=False, action="store_true")
 
@@ -167,4 +170,4 @@ if __name__ == "__main__":
         args, model=model, alphabet=protein_alphabet, starting_sequence=starting_sequence
     )
     runner = Runner(args)
-    runner.run(landscape, starting_sequence, model, explorer, args.name, args.runs)
+    runner.run(landscape, starting_sequence, model, explorer, args.name, args.runs, args.out_dir)

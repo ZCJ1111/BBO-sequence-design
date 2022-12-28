@@ -32,14 +32,20 @@ install: https://github.com/samsinai/FLEXS/
 Run the following commands to reproduce our main results shown in section 5.1. There are eight fitness landscapes to support a diverse evaluation on black-box protein sequence design.
 
 ```bash
-python run.py --alg=pex --net=mufacnet --task=avGFP  # Green Fluorescent Proteins
-python run.py --alg=pex --net=mufacnet --task=AAV    # Adeno-associated Viruses
-python run.py --alg=pex --net=mufacnet --task=TEM    # TEM-1 β-Lactamase
-python run.py --alg=pex --net=mufacnet --task=E4B    # Ubiquitination Factor Ube4b
-python run.py --alg=pex --net=mufacnet --task=AMIE   # Aliphatic Amide Hydrolase
-python run.py --alg=pex --net=mufacnet --task=LGK    # Levoglucosan Kinase
-python run.py --alg=pex --net=mufacnet --task=Pab1   # Poly(A)-binding Protein
-python run.py --alg=pex --net=mufacnet --task=UBE2I  # SUMO E2 conjugase
+python run.py \
+  --device 'cuda:0' \
+  --landscape custom \
+  --alg pex \
+  --name 'esm-pex-1ADQ' \
+  --num_rounds 40 \
+  --net esm1b \
+  --ensemble_size 1 \
+  --out-dir /path/to/output \
+  --fitness-data /path/to/dataset \
+  --sequence-column 'CDR3' \
+  --fitness-column 'Energy' \
+  --invert-score
+
 ```
 
 In the default configuration, the protein fitness landscape is simulated by a TAPE-based oracle model. By adding the argument `--oracle_model=esm1b`, the landscape simulator is switched to an oracle model based on ESM-1b.
