@@ -1,3 +1,4 @@
+import gpytorch
 import numpy as np
 import torch
 import torch.nn as nn
@@ -22,6 +23,10 @@ class Decoder(nn.Module):
         x = self.attention1d(x)
         x = torch.relu(self.dense_3(x))
         x = self.dense_4(x)
+        mean_x = self.mean_module(x)
+        # print('mean x',mean_x)
+        covar_x = self.covar_module(x)
+        x = gpytorch.distributions.MultivariateNormal(mean_x, covar_x)
         return x
 
 

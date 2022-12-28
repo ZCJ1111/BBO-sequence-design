@@ -128,7 +128,7 @@ def get_args():
         )
 
     # PEX arguments
-    if args.alg == "pex":
+    if args.alg in ("pex", "pexcons"):
         parser.add_argument(
             "--num_random_mutations",
             help="number of amino acids to mutate per sequence",

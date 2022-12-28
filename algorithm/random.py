@@ -75,7 +75,8 @@ class Random(flexs.Explorer):
                 seq, self.mu / len(seq), alphabet=self.alphabet
             )
 
-            if new_seq not in old_sequence_set:
+            if new_seq not in old_sequence_set and int(new_seq, 2) < self.data_range:
+
                 new_seqs.add(new_seq)
 
         new_seqs = np.array(list(new_seqs))

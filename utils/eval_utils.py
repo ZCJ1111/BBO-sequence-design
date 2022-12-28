@@ -17,6 +17,8 @@ class Runner:
     def __init__(self, args):
         self.num_rounds = args.num_rounds
         self.num_queries_per_round = args.num_queries_per_round
+        self.alg = args.alg
+        self.cutom_data = args.custom_data_name
 
     def run(self, landscape, starting_sequence, model, explorer, name, runs, out_dir):
         # names = np.load("/home/tianyu/code/biodrug/unify-length/names.npy")
@@ -35,6 +37,7 @@ class Runner:
         rts = []
         searched_seq_ = []
         loss_ = [None]
+        round_min_seq = starting_sequence
         for round in range(1, self.num_rounds + 1):
             round_start_time = time.time()
 
@@ -47,7 +50,10 @@ class Runner:
             # inference all sequence?
             # print('result',self.results)
             print(f"Proposing sequences in round {round}")
-            sequences, _ = explorer.propose_sequences(self.results, all_seqs=names)
+            if self.alg == "pexcons":
+                sequences, _ = explorer.propose_sequences(self.results, round_min_seq)
+            else:
+                sequences, _ = explorer.propose_sequences(self.results, all_seqs=names)
             # sequences=['CARVPRAYYYDSSGPNNDYW','CARVPRAYYYDSSGPNNDYW']
             # print('seq',sequences)
             # print('start seq',starting_sequence)
@@ -57,10 +63,13 @@ class Runner:
             true_scores = landscape.get_fitness(sequences)
             # print('len true_score',len(true_scores))
 
+            round_mutation = []
             for seq in sequences:
-                mutation.append(levenshtein_distance(s1=starting_sequence, s2=seq))
+                round_mutation.append(levenshtein_distance(s1=starting_sequence, s2=seq))
+            mutation += round_mutation
 
             round_running_time = time.time() - round_start_time
+            round_min_seq = sequences[np.argmin(round_mutation)]
             roundss, score_max, rt, mutcounts, searched_seq = self.update_results(
                 round, sequences, true_scores, np.average(mutation), round_running_time
             )
