@@ -49,7 +49,3 @@ python run.py \
 ```
 
 In the default configuration, the protein fitness landscape is simulated by a TAPE-based oracle model. By adding the argument `--oracle_model=esm1b`, the landscape simulator is switched to an oracle model based on ESM-1b.
-
-## Contact
-
-Please contact zhizhour\[at\]helixon.com for any questions related to the source code.

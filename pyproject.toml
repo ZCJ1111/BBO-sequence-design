@@ -10,8 +10,10 @@ numpy = { version = "^1.24.0", source = "China" }
 pandas = { version = "^1.5.2", source = "China" }
 sequence-models = { version = "^1.6.0", source = "China" }
 Levenshtein = { version = "^0.20.8", source = "China" }
+h5py = {version = ">=2", source = "China"}
 flexs = { version = "^0.2.8", source = "China" }
 torch = { version = ">=1.10.2", source = "China" }
+gpytorch = {version = "^1.9.0", source = "China"}
 
 [tool.poetry.dev-dependencies]
 
