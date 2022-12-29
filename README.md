@@ -15,21 +15,19 @@ conda install pytorch=1.10.2 cudatoolkit=11.3 -c pytorch -y
 conda install numpy=1.19 pandas=1.3 -y
 conda install -c conda-forge tape_proteins=0.5 -y
 pip install sequence-models==1.2.0
+pip install flexs
+pip install gpytorch
 ```
 
-Clone this repository and download the oracle landscape models by the following commands:
+Alternatively, install all the packages with Poetry:
 
 ```bash
-git clone https://github.com/HeliXonProtein/proximal-exploration.git
-cd proximal-exploration
-bash download_landscape.sh
+poetry install
 ```
-
-install: https://github.com/samsinai/FLEXS/
 
 ## Usage
 
-Run the following commands to reproduce our main results shown in section 5.1. There are eight fitness landscapes to support a diverse evaluation on black-box protein sequence design.
+Run the following commands to search for CDR3 sequences with lowest dG in the given dataset:
 
 ```bash
 python run.py \
@@ -47,5 +45,3 @@ python run.py \
   --invert-score
 
 ```
-
-In the default configuration, the protein fitness landscape is simulated by a TAPE-based oracle model. By adding the argument `--oracle_model=esm1b`, the landscape simulator is switched to an oracle model based on ESM-1b.
