@@ -29,12 +29,9 @@ def random_sample_within_discrete_tr_ordinal(x_center, max_hamming_dist, n_categ
 
 def check_cdr_constraints_all(x, x_center_local=None, hamming=None, config=None):
     COUNT_AA = 5
-    AA = 'ACDEFGHIKLMNPQRSTVWY'
-    AA_to_idx = {aa: i for i, aa in enumerate(AA)}
-    idx_to_AA = {value: key for key, value in AA_to_idx.items()}
     N_glycosylation_pattern = 'N[^P][ST][^P]'
     # Constraints on CDR3 sequence
-    x_to_seq = ''.join(idx_to_AA[int(aa)] for aa in x)
+    x_to_seq = x
     
     # prot = ProteinAnalysis(x_to_seq)
     # charge = prot.charge_at_pH(7.4)
@@ -63,6 +60,32 @@ def check_cdr_constraints_all(x, x_center_local=None, hamming=None, config=None)
         return int(not (c1)), int(not (c2)), int(not (c3)), int(not (c4))
 
     return int(not (c1)), int(not (c2)), int(not (c3))
+
+
+def check_cdr_constraints(input):
+    for i in range(len(input)):
+        x_to_seq=input
+        N_glycosylation_pattern = 'N[^P][ST][^P]'
+
+        #prot = ProteinAnalysis(x_to_seq)
+        #charge = prot.charge_at_pH(7.4)
+        # Counting
+        count = max([sum(1 for _ in group) for _, group in groupby(x_to_seq)])
+        if count>5:
+            return False
+        charge = 0
+        for char in x_to_seq:
+            charge += int(char == 'R' or char == 'K') + 0.1 * int(char == 'H') - int(char == 'D' or char == 'E')
+        if (charge > 2.0 or charge < -2.0):
+            return False
+
+        if re.search(N_glycosylation_pattern, x_to_seq):
+            return False
+
+    #stability = prot.instability_index()
+    #if stability>40:
+    #    return False
+    return True
 
 
 def convert_str(data, name):
