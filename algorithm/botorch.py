@@ -2,6 +2,7 @@
 import random
 from bisect import bisect_left
 from typing import Optional, Tuple
+from utils.seq_utils import  sample_new_seqs
 
 import flexs
 import numpy as np
@@ -61,6 +62,7 @@ class BO(flexs.Explorer):
         self.seq_len = None
         self.memory = None
         self.initial_uncertainty = None
+        self.rng = np.random.default_rng(42)
 
     def initialize_data_structures(self):
         """Initialize."""
@@ -143,19 +145,14 @@ class BO(flexs.Explorer):
                 actions.add(tuple(action))
         return list(actions)
 
-    def pick_action(self, all_measured_seqs):
+    def pick_action(self, all_measured_seqs,all_seqs):
         """Pick action."""
         state = self.state.copy()
-        actions = self.sample_actions()
-        actions_to_screen = []
         states_to_screen = []
-        for i in range(self.model_queries_per_batch // self.sequences_batch_size):
-            x = np.zeros((self.seq_len, len(self.alphabet)))
-            for action in actions[i]:
-                x[action] = 1
-            actions_to_screen.append(x)
-            state_to_screen = construct_mutant_from_sample(x, state)
-            states_to_screen.append(one_hot_to_string(state_to_screen, self.alphabet))
+        states_to_screen = sample_new_seqs(
+                        all_seqs, all_measured_seqs, self.model_queries_per_batch // self.sequences_batch_size, self.rng
+                    )
+
 
         ensemble_preds = self.model.get_fitness(states_to_screen)
         mean_pred = np.mean(ensemble_preds)
@@ -178,18 +175,17 @@ class BO(flexs.Explorer):
         else:
             action_ind = np.random.randint(len(method_pred))
 
-        # print('action id',action_ind)
 
         action_ind = np.argmax(method_pred)
         uncertainty = np.std(method_pred[action_ind])
-        action = actions_to_screen[action_ind]
+        action = action_ind
         new_state_string = states_to_screen[action_ind]
         self.state = string_to_one_hot(new_state_string, self.alphabet)
         new_state = self.state
         reward = np.mean(ensemble_preds[action_ind])
         if new_state_string not in all_measured_seqs:
             self.best_fitness = max(self.best_fitness, reward)
-            self.memory.store(state.ravel(), action.ravel(), reward, new_state.ravel())
+            self.memory.store(state.ravel(), action, reward, new_state.ravel())
         self.num_actions += 1
         return uncertainty, new_state_string, reward
 
@@ -238,7 +234,7 @@ class BO(flexs.Explorer):
         prev_cost = self.model.cost
         all_measured_seqs = set(measured_sequences["sequence"].tolist())
         while self.model.cost - prev_cost < self.model_queries_per_batch:
-            uncertainty, new_state_string, _ = self.pick_action(all_measured_seqs)
+            uncertainty, new_state_string, _ = self.pick_action(all_measured_seqs,kwargs["all_seqs"])
             all_measured_seqs.add(new_state_string)
             samples.add(new_state_string)
             if self.initial_uncertainty is None:
@@ -257,9 +253,7 @@ class BO(flexs.Explorer):
             samples.update(random_sequences)
         # get predicted fitnesses of samples
         samples = list(samples)
-        # print('sample',samples)
         preds = np.mean(self.model.get_fitness(samples))
-        # print('pred',preds)
         # train ensemble model before returning samples
         self.train_models()
 
