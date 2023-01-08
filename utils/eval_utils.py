@@ -1,6 +1,6 @@
 import time
 from pathlib import Path
-
+from typing import List
 import numpy as np
 import pandas as pd
 
@@ -18,7 +18,7 @@ class Runner:
         self.num_rounds = args.num_rounds
         self.num_queries_per_round = args.num_queries_per_round
         self.alg = args.alg
-        self.cutom_data = args.custom_data_name
+        # self.cutom_data = args.custom_data_name
 
     def run(self, landscape, starting_sequence, model, explorer, name, runs, out_dir):
         # names = np.load("/home/tianyu/code/biodrug/unify-length/names.npy")
@@ -93,8 +93,8 @@ class Runner:
     def update_results(
         self,
         round: int,
-        sequences: list[str],
-        true_scores: list[float],
+        sequences: List[str],
+        true_scores: List[float],
         mutcounts: float,
         running_time: float = 0.0,
     ):

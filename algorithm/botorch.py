@@ -57,7 +57,6 @@ class BO(flexs.Explorer):
         self.recomb_rate = 0.2
         self.best_fitness = 0
         self.num_actions = 0
-        self.data_range = args.datasetrange
         self.state = None
         self.seq_len = None
         self.memory = None
@@ -241,10 +240,7 @@ class BO(flexs.Explorer):
         while self.model.cost - prev_cost < self.model_queries_per_batch:
             uncertainty, new_state_string, _ = self.pick_action(all_measured_seqs)
             all_measured_seqs.add(new_state_string)
-            if int(new_state_string, 2) < self.data_range:
-                # print(int(new_state_string,2))
-                # print(self.data_range)
-                samples.add(new_state_string)
+            samples.add(new_state_string)
             if self.initial_uncertainty is None:
                 self.initial_uncertainty = uncertainty
             if uncertainty > 2 * self.initial_uncertainty:

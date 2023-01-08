@@ -7,6 +7,7 @@ import pandas as pd
 from flexs.utils import sequence_utils as s_utils
 
 from . import register_algorithm
+from utils.seq_utils import  sample_new_seqs
 
 
 @register_algorithm("random")
@@ -65,27 +66,24 @@ class Random(flexs.Explorer):
         self, measured_sequences: pd.DataFrame, **kwargs
     ) -> Tuple[np.ndarray, np.ndarray]:
         """Propose top `sequences_batch_size` sequences for evaluation."""
-        old_sequences = measured_sequences["sequence"]
-        old_sequence_set = set(old_sequences)
-        new_seqs = set()
 
-        while len(new_seqs) <= self.model_queries_per_batch:
-            seq = self.rng.choice(old_sequences)
-            new_seq = s_utils.generate_random_mutant(
-                seq, self.mu / len(seq), alphabet=self.alphabet
-            )
+        all_seqs = kwargs["all_seqs"]
+        measured_sequence_set = set(measured_sequences["sequence"])
 
-            if new_seq not in old_sequence_set and int(new_seq, 2) < self.data_range:
+        query_batch = sample_new_seqs(
+            all_seqs, measured_sequence_set, self.rounds, self.rng
+        )
 
-                new_seqs.add(new_seq)
+        return query_batch, [None] * len(query_batch)
 
-        new_seqs = np.array(list(new_seqs))
-        preds = self.model.get_fitness(new_seqs)
+        # new_seqs = np.array(list(new_seqs))
+        # preds = self.model.get_fitness(new_seqs)
 
-        if self.elitist:
-            idxs = np.argsort(preds)[: -self.sequences_batch_size : -1]
-        else:
-            idxs = self.rng.integers(0, len(new_seqs), size=self.sequences_batch_size)
-        # import random
-        # idxs= random.sample(idxs,self.rounds)
-        return new_seqs[idxs[0 : self.rounds]], preds[idxs]
+        # if self.elitist:
+        #     idxs = np.argsort(preds)[: -self.sequences_batch_size : -1]
+
+
+
+        # # import random
+        # # idxs= random.sample(idxs,self.rounds)
+        # return new_seqs[idxs[0 : self.rounds]], preds[idxs]
