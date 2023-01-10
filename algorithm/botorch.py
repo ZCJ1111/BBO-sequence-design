@@ -2,7 +2,7 @@
 import random
 from bisect import bisect_left
 from typing import Optional, Tuple
-from utils.seq_utils import  sample_new_seqs
+from utils.seq_utils import  sample_new_seqs,levenshtein_distance,check_cdr_constraints
 
 import flexs
 import numpy as np
@@ -33,7 +33,7 @@ class BO(flexs.Explorer):
     def __init__(
         self,
         args,
-        model: flexs.Model,
+        model,
         alphabet: str,
         starting_sequence: str,
     ):
@@ -62,7 +62,7 @@ class BO(flexs.Explorer):
         self.seq_len = None
         self.memory = None
         self.initial_uncertainty = None
-        self.rng = np.random.default_rng(42)
+        self.rng = np.random.default_rng(args.seed)
 
     def initialize_data_structures(self):
         """Initialize."""
@@ -73,7 +73,7 @@ class BO(flexs.Explorer):
             len(self.alphabet) * self.seq_len, 100000, self.sequences_batch_size, 0.6
         )
 
-    def train_models(self):
+    def train_models(self): ## change reward
         """Train the model."""
         if len(self.memory) >= self.sequences_batch_size:
             batch = self.memory.sample_batch()
@@ -125,36 +125,28 @@ class BO(flexs.Explorer):
 
         return np.mean(vals) + mean_pre - discount * np.std(std_pre)
 
-    def sample_actions(self):
-        """Sample actions resulting in sequences to screen."""
-        actions = set()
-        pos_changes = []
-        for pos in range(self.seq_len):
-            pos_changes.append([])
-            for res in range(len(self.alphabet)):
-                if self.state[pos, res] == 0:
-                    pos_changes[pos].append((pos, res))
 
-        while len(actions) < self.model_queries_per_batch / self.sequences_batch_size:
-            action = []
-            for pos in range(self.seq_len):
-                if np.random.random() < 1 / self.seq_len:
-                    pos_tuple = pos_changes[pos][np.random.randint(len(self.alphabet) - 1)]
-                    action.append(pos_tuple)
-            if len(action) > 0 and tuple(action) not in actions:
-                actions.add(tuple(action))
-        return list(actions)
-
-    def pick_action(self, all_measured_seqs,all_seqs):
+    def pick_action(self, all_measured_seqs,x_central_local,landscape,all_seqs, threshold=10):
         """Pick action."""
         state = self.state.copy()
         states_to_screen = []
-        states_to_screen = sample_new_seqs(
-                        all_seqs, all_measured_seqs, self.model_queries_per_batch // self.sequences_batch_size, self.rng
+        states_to_screen=[]
+        ## local search for all satisfied seq candidate pool
+        candidate_pool = list(set(all_seqs) - set(all_measured_seqs))
+        ## not enough do global search
+        if len(candidate_pool)<(self.model_queries_per_batch // self.sequences_batch_size):
+            states_to_screen_=sample_new_seqs(
+                        all_seqs, all_measured_seqs, (self.model_queries_per_batch // self.sequences_batch_size)-len(candidate_pool), self.rng
                     )
+            candidate_pool.extend(states_to_screen_)
+            states_to_screen=candidate_pool
 
+        ## enough then we sample from satisfied pool
+        else:
+            states_to_screen=self.rng.choice(list(candidate_pool), size=self.model_queries_per_batch // self.sequences_batch_size, replace=False)
 
-        ensemble_preds = self.model.get_fitness(states_to_screen)
+        ## put it outside
+        ensemble_preds = landscape.get_fitness(states_to_screen) ## landscape's fitnesss
         mean_pred = np.mean(ensemble_preds)
         std_pre = np.std(ensemble_preds)
 
@@ -164,19 +156,19 @@ class BO(flexs.Explorer):
             else [self.UCB(vals, mean_pred, std_pre) for vals in ensemble_preds]
         )
 
-        a = np.random.uniform(0, 1)
+        a = np.random.uniform(0, 1) ### print
         a_ = [a] * len(method_pred)
         lists_of_lists = [method_pred, a_]
         method_pred = [sum(x) for x in zip(*lists_of_lists)]
         epsilon = 0.99
 
+        ## this is to do epislon greedy policy
         if a <= epsilon:
             action_ind = np.argmax(method_pred)
         else:
             action_ind = np.random.randint(len(method_pred))
 
 
-        action_ind = np.argmax(method_pred)
         uncertainty = np.std(method_pred[action_ind])
         action = action_ind
         new_state_string = states_to_screen[action_ind]
@@ -185,7 +177,7 @@ class BO(flexs.Explorer):
         reward = np.mean(ensemble_preds[action_ind])
         if new_state_string not in all_measured_seqs:
             self.best_fitness = max(self.best_fitness, reward)
-            self.memory.store(state.ravel(), action, reward, new_state.ravel())
+            self.memory.store(state.ravel(), action, reward, new_state.ravel()) 
         self.num_actions += 1
         return uncertainty, new_state_string, reward
 
@@ -202,12 +194,13 @@ class BO(flexs.Explorer):
         return sequences[index]
 
     def propose_sequences(
-        self, measured_sequences: pd.DataFrame, **kwargs
+        self, measured_sequences: pd.DataFrame, landscape, **kwargs
     ) -> Tuple[np.ndarray, np.ndarray]:
         """Propose top `sequences_batch_size` sequences for evaluation."""
         if self.num_actions == 0:
             # indicates model was reset
             self.initialize_data_structures()
+            x_central_local=self.starting_sequence
         else:
             # set state to best measured sequence from prior batch
             last_round_num = measured_sequences["round"].max()
@@ -228,14 +221,18 @@ class BO(flexs.Explorer):
             measured_batch = sorted(measured_batch)
             sampled_seq = self.Thompson_sample(measured_batch)
             self.state = string_to_one_hot(sampled_seq, self.alphabet)
+            max_score_id=np.argmax(_last_batch_true_scores)
+            x_central_local = last_batch_seqs[max_score_id]
         # generate next batch by picking actions
         self.initial_uncertainty = None
         samples = set()
-        prev_cost = self.model.cost
         all_measured_seqs = set(measured_sequences["sequence"].tolist())
-        while self.model.cost - prev_cost < self.model_queries_per_batch:
-            uncertainty, new_state_string, _ = self.pick_action(all_measured_seqs,kwargs["all_seqs"])
+        prev_cost = len(all_measured_seqs)
+        query_cost= prev_cost
+        while query_cost - prev_cost < self.model_queries_per_batch:
+            uncertainty, new_state_string, _ = self.pick_action(all_measured_seqs,x_central_local,landscape,kwargs["all_seqs"]) ## too slow
             all_measured_seqs.add(new_state_string)
+            query_cost= len(all_measured_seqs)
             samples.add(new_state_string)
             if self.initial_uncertainty is None:
                 self.initial_uncertainty = uncertainty
@@ -258,6 +255,6 @@ class BO(flexs.Explorer):
         self.train_models()
 
         samples = random.sample(
-            samples, min(self.rounds, len(samples))
-        )  # to avoid out of boundary
+            samples, self.sequences_batch_size
+        ) 
         return samples, preds
