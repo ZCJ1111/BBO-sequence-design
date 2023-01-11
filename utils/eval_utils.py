@@ -52,14 +52,14 @@ class Runner:
             print(f"Proposing sequences in round {round}")
             if self.alg == "pexcons":
                 sequences, _ = explorer.propose_sequences(self.results, round_min_seq)
+
+            if self.alg == "antbo" or self.alg== "botorch":
+                sequences, _ = explorer.propose_sequences(self.results, landscape=landscape, all_seqs=names)
+
             else:
                 sequences, _ = explorer.propose_sequences(self.results, all_seqs=names)
-            # sequences=['CARVPRAYYYDSSGPNNDYW','CARVPRAYYYDSSGPNNDYW']
-            # print('seq',sequences)
-            # print('start seq',starting_sequence)
-            # print('len seq',len(sequences),'seq eg',len(sequences[0]),'len start seq',len(starting_sequence))
-            assert len(sequences) <= self.num_queries_per_round
 
+            assert len(sequences) <= self.num_queries_per_round
             true_scores = landscape.get_fitness(sequences)
             # print('len true_score',len(true_scores))
 
