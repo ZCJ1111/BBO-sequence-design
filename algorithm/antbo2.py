@@ -56,6 +56,7 @@ class BO(flexs.Explorer):
         self.alphabet = alphabet
         self.method = "UCB"
         self.recomb_rate = 0.2
+        self.batch_size = args.batch_size
         self.best_fitness = 0
         self.num_actions = 0
         self.state = None
@@ -137,7 +138,6 @@ class BO(flexs.Explorer):
         ## put it outside
         for i in range(len(candidate_pool_)):
             dist=levenshtein_distance(x_central_local,candidate_pool_[i])
-            # constraint=check_cdr_constraints(candidate_pool_[i])
             if dist<threshold:
                 candidate_pool.append(candidate_pool_[i])
                 
@@ -153,7 +153,15 @@ class BO(flexs.Explorer):
         else:
             states_to_screen=candidate_pool
 
-        ensemble_preds= self.model.get_fitness(states_to_screen)
+        ensemble_preds = []
+        eval_batch_size = self.batch_size
+        print('eval batch size',eval_batch_size)
+        for i in range(0, len(states_to_screen), eval_batch_size):
+            candidate_batch = candidate_pool[i : i + eval_batch_size]
+            batch_model_scores = self.model.get_fitness(candidate_batch)
+            ensemble_preds.append(batch_model_scores)
+        ensemble_preds = np.concatenate(ensemble_preds)
+
         mean_pred = np.mean(ensemble_preds)
         std_pre = np.std(ensemble_preds)
         method_pred = (
@@ -162,7 +170,7 @@ class BO(flexs.Explorer):
             else [self.UCB(vals, mean_pred, std_pre) for vals in ensemble_preds]
         )
 
-        action_ind = np.argpartition(method_pred, self.sequences_batch_size)[:-self.sequences_batch_size]
+        action_ind = np.argpartition(method_pred, self.sequences_batch_size)[-self.sequences_batch_size:]
         uncertainty = np.std(method_pred)
         new_state_string = states_to_screen[action_ind]
 
