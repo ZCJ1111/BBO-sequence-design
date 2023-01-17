@@ -33,26 +33,27 @@ def get_args():
     )
     parser.add_argument("--name", help="algorithm name", type=str, default="pexmufac")
     parser.add_argument("--runs", help="random runs tag", type=int, default=1)
+    parser.add_argument("--seed", help="random seed", type=int, default=42)
+
     parser.add_argument(
         "--out-dir", help="Output directory", type=str, dest="out_dir", default="./expresult"
     )
-    parser.add_argument("--datasetrange", help="bound of dataset", type=int, default=104541)
     parser.add_argument("--gplayer", help="add gplayer or not", default=False, action="store_true")
 
     parser.add_argument(
-        "--num_rounds", help="number of query rounds", type=int, default=100
+        "--num_rounds", help="number of query rounds", type=int, default=2
     )  # rounds have to be smaller or equal than samples
     parser.add_argument(
         "--num_queries_per_round",
         help="number of black-box queries per round",
         type=int,
-        default=100,
+        default=2,
     )
     parser.add_argument(
         "--num_model_queries_per_round",
         help="number of model predictions per round",
         type=int,
-        default=2000,
+        default=10,
     )
 
     # model arguments
@@ -154,7 +155,7 @@ def get_args():
             help="Cache directory for the ESM model checkpoint",
             type=str,
             dest="torch_hub_cache",
-            default="/nfs_beijing_ai/zhouyi/share/pretrained-models",
+            default="/home/tianyu/code/pretrained_esm",
         )
 
     args = parser.parse_args()
@@ -171,3 +172,17 @@ if __name__ == "__main__":
     )
     runner = Runner(args)
     runner.run(landscape, starting_sequence, model, explorer, args.name, args.runs, args.out_dir)
+
+
+
+## simplified example:
+    # import model
+    # import algorithm
+    
+
+    # num_input_channel = 20
+    # net = model.cnn.ConvolutionalNetworkModel(args,alphabet=protein_alphabet, starting_sequence=starting_sequence)
+    # explorer = algorithm.pex.ProximalExploration( args, model=net, alphabet=protein_alphabet, starting_sequence=starting_sequence)
+
+    # runner = Runner(args)
+    # runner.run(landscape, starting_sequence, net, explorer, args.name, args.runs, args.out_dir)
