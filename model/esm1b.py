@@ -1,6 +1,7 @@
 import gpytorch
 import numpy as np
 import torch
+import esm
 import torch.nn as nn
 from sequence_models.structure import Attention1d
 from torch.utils.data import DataLoader, TensorDataset
@@ -33,11 +34,12 @@ class Decoder(nn.Module):
 class ESM1bAttention1d(nn.Module):
     def __init__(self, args):
         super().__init__()
-        esm_dir_path = args.torch_hub_cache
-        torch.hub.set_dir(esm_dir_path)
-        self.encoder, self.alphabet = torch.hub.load(
-            "facebookresearch/esm:main", "esm2_t33_650M_UR50D"
-        )
+        # esm_dir_path = args.torch_hub_cache
+        # torch.hub.set_dir(esm_dir_path)
+        # self.encoder, self.alphabet = torch.hub.load(
+        #     "facebookresearch/esm:main", "esm2_t33_650M_UR50D"
+        # )
+        self.encoder, self.alphabet = esm.pretrained.esm1b_t33_650M_UR50S()
         for param in self.encoder.parameters():
             param.requires_grad = False
 

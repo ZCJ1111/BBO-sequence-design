@@ -53,7 +53,7 @@ def convert_str(data, name):
     #     return seq
 
 
-@lru_cache
+@lru_cache(maxsize=None)
 def levenshtein_distance(s1, s2):
     return distance(s1, s2)
 

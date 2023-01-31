@@ -19,8 +19,8 @@ class ProximalExploration:
         self.batch_size = args.batch_size
         self.num_random_mutations = args.num_random_mutations
         self.frontier_neighbor_size = args.frontier_neighbor_size
-        self.dataset_range=args.datasetrange
-        self.cutom_data=args.custom_data_name
+        # self.dataset_range=args.datasetrange
+        # self.cutom_data=args.custom_data_name
     
     def propose_sequences(self, measured_sequences,round_min_seq):
         # Input:  - measured_sequences: pandas.DataFrame
@@ -39,7 +39,7 @@ class ProximalExploration:
     def _propose_sequences(self, measured_sequences,round_min_seq):
         measured_sequence_set = set(measured_sequences['sequence'])
         # Generate random mutations in the first round.
-        names=np.load(f'/home/tianyu/code/biodrug/unify-length/names_{self.cutom_data}.npy')
+        names=np.load(f'/home/tianyu/code/biodrug/unify-length/names_{self.custom_data}.npy')
 
         if len(measured_sequence_set)==1:
             query_batch = []

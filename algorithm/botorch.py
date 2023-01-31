@@ -63,7 +63,7 @@ class BO(flexs.Explorer):
         self.memory = None
         self.initial_uncertainty = None
         self.rng = np.random.default_rng(args.seed)
-
+        
     def initialize_data_structures(self):
         """Initialize."""
         self.state = string_to_one_hot(self.starting_sequence, self.alphabet)

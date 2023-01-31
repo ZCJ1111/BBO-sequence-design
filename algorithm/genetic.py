@@ -105,17 +105,20 @@ class GeneticAlgorithm(flexs.Explorer):
         """Propose top `sequences_batch_size` sequences for evaluation."""
         # Set the torch seed by generating a random integer from the pre-seeded self.rng
         torch.manual_seed(self.rng.integers(-(2**31), 2**31))
-
+        
         measured_sequence_set = set(measured_sequences["sequence"])
-
+        print('measured_sequence_set is',  measured_sequence_set)
         # Create initial population by choosing parents from `measured_sequences`
         initial_pop_inds = self._choose_parents(
             measured_sequences["true_score"].to_numpy(),
             self.population_size,
         )
+        print(f'initial_pop_inds is {initial_pop_inds}')
+        print(f'{measured_sequences["true_score"].to_numpy()}')
         pop = measured_sequences["sequence"].to_numpy()[initial_pop_inds]
         scores = measured_sequences["true_score"].to_numpy()[initial_pop_inds]
-
+        print('pop is', pop)
+        print('score is', scores)
         sequences = {}
         initial_cost = self.model.cost
         while self.model.cost - initial_cost + self.population_size < self.model_queries_per_batch:

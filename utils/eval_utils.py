@@ -48,26 +48,31 @@ class Runner:
                 loss_.append(loss)
             # np.save('loss100custom.npy',loss_)
             # inference all sequence?
-            # print('result',self.results)
+            
             print(f"Proposing sequences in round {round}")
+            
             if self.alg == "pexcons":
                 sequences, _ = explorer.propose_sequences(self.results, round_min_seq)
+                
 
             if self.alg == "antbo" or self.alg== "botorch":
                 sequences, _ = explorer.propose_sequences(self.results, landscape=landscape, all_seqs=names)
 
             else:
                 sequences, _ = explorer.propose_sequences(self.results, all_seqs=names)
-
+                   
             assert len(sequences) <= self.num_queries_per_round
             true_scores = landscape.get_fitness(sequences)
             # print('len true_score',len(true_scores))
-
+           
             round_mutation = []
             for seq in sequences:
                 round_mutation.append(levenshtein_distance(s1=starting_sequence, s2=seq))
+                print('distance is', levenshtein_distance(s1=starting_sequence, s2=seq))
             mutation += round_mutation
-
+            
+            print('round_mutation is', round_mutation)
+            print('mutation is ', mutation)
             round_running_time = time.time() - round_start_time
             round_min_seq = sequences[np.argmin(round_mutation)]
             roundss, score_max, rt, mutcounts, searched_seq = self.update_results(
