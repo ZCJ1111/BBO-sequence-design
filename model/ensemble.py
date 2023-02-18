@@ -12,7 +12,7 @@ class Ensemble:
         self.models = models
         self.ensemble_func = ensemble_rules[ensemble_rule]
         self.cost = 0
-
+        
     def train(self, sequences, labels):
         total_loss = 0.0
         for model in self.models:
@@ -24,4 +24,6 @@ class Ensemble:
         # Input:  - sequences:   [batch_size, sequence_length]
         # Output: - predictions: [batch_size]
         self.cost += len(sequences)
-        return self.ensemble_func([model.get_fitness(sequences) for model in self.models])
+        ensemble = self.ensemble_func([model.get_fitness(sequences) for model in self.models])
+
+        return ensemble

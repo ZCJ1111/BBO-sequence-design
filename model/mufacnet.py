@@ -99,5 +99,7 @@ class MutationFactorizationModel(torch_model.TorchModel):
                 .cpu()
                 .numpy()
             )
+        print(f'predictions is {predictions}')
+        
         predictions = np.squeeze(predictions, axis=-1)
         return predictions

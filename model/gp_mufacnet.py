@@ -2,11 +2,12 @@ import numpy as np
 import torch
 import torch.nn as nn
 import gpytorch
+from tqdm import tqdm
 from gpytorch.models import ExactGP
 from gpytorch.likelihoods import GaussianLikelihood
 from gpytorch.kernels import RBFKernel
 from torch.utils.data import Dataset, DataLoader
-
+from gpytorch.distributions import MultivariateNormal
 
 from utils.seq_utils import sequences_to_mutation_sets
 
@@ -57,7 +58,8 @@ class GPMuFacNet(ExactGP):
         predictions = self.joint_effect_decoder(set_embeddings)
         mean_predictions = self.mean_module(predictions)
         covar_predictions = self.covar_module(predictions)
-        return gpytorch.distributions.MultivariateNormal(mean_predictions, covar_predictions)
+        
+        return MultivariateNormal(mean_predictions, covar_predictions)
 
 
 @register_model("GPmufacnet")
@@ -94,6 +96,8 @@ class MutationFactorizationModel(torch_model.TorchModel):
         # Output: - loss:               [1]
 
         mutation_sets, mutation_sets_mask, labels = data
+        
+        
         outputs = torch.squeeze(
             self.net(mutation_sets.to(self.device), mutation_sets_mask.to(self.device)), dim=-1
         )
@@ -103,10 +107,12 @@ class MutationFactorizationModel(torch_model.TorchModel):
     def train(self, sequences, labels):
         # Input: - sequences: [dataset_size, sequence_length]
         #        - labels:    [dataset_size]
-
+        
+        loader_train = self.get_data_loader(sequences, labels)
+        
+        self.net = self.net.set_train_data(dataset_train.mutation_sets, dataset_train.mutation_sets_mask)
         self.net.train()
         self.net.likelihood.train()
-        loader_train = self.get_data_loader(sequences, labels)
         best_loss, num_no_improvement = np.inf, 0
         epoch_num = 1
         while (num_no_improvement < self.args.patience) and (epoch_num < self.args.max_epochs):
@@ -132,12 +138,20 @@ class MutationFactorizationModel(torch_model.TorchModel):
         # Output: - predictions: [batch_size]
 
         self.net.eval()
-        with torch.no_grad():
+        self.net.likelihood.eval()
+        with torch.no_grad(), gpytorch.settings.fast_pred_var():
             mutation_sets, mutation_sets_mask = sequences_to_mutation_sets(
                 sequences, self.alphabet, self.wt_sequence, self.context_radius
             )
             predictions = (
-                self.net(mutation_sets.to(self.device), mutation_sets_mask.to(self.device)).numpy())
-            print(f'predictions is {predictions}')
-        predictions = np.squeeze(predictions, axis=-1)
-        return predictions
+                self.net(mutation_sets.to(self.device), mutation_sets_mask.to(self.device)))
+            print(f'predictions means is {predictions.mean}')
+            print(f'prediction variance{predictions.variance}')
+            observation = self.net.likelihood(predictions).sample()
+        
+        # predictions.mean
+        # predictions.variance
+        observation = observation.detach().numpy()  
+        # predictions = np.squeeze(predictions, axis=-1)
+        
+        return observation
