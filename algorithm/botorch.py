@@ -89,7 +89,7 @@ class BO(flexs.Explorer):
         rewards = batch["rews"]
         
         self.model.train(state_seqs, rewards)
-        self.model.likelihood.train()
+        
 
     def _recombine_population(self, gen):
         np.random.shuffle(gen)

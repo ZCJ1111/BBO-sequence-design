@@ -66,8 +66,9 @@ class GPMuFacNet(ExactGP):
 class MutationFactorizationModel(torch_model.TorchModel):
     def __init__(self, args, alphabet, starting_sequence, **kwargs):
         super().__init__(
-            args, alphabet, net=GPMuFacNet(input_dim=len(alphabet), likelihood=GaussianLikelihood(),latent_dim=args.latent_dim)
+            args, alphabet, net=GPMuFacNet(input_dim=len(alphabet),likelihood=GaussianLikelihood(),latent_dim=args.latent_dim)
         )
+        
         self.wt_sequence = starting_sequence
         self.context_radius = args.context_radius
         self.loss_func = gpytorch.mlls.ExactMarginalLogLikelihood(self.net.likelihood, self.net)
@@ -94,13 +95,11 @@ class MutationFactorizationModel(torch_model.TorchModel):
         #         - mutation_sets_mask: [batch_size, max_mutation_num]
         #         - labels:             [batch_size]
         # Output: - loss:               [1]
-
+        
         mutation_sets, mutation_sets_mask, labels = data
-        
-        
-        outputs = torch.squeeze(
-            self.net(mutation_sets.to(self.device), mutation_sets_mask.to(self.device)), dim=-1
-        )
+       
+        self.net.eval()
+        outputs = self.net(mutation_sets.to(self.device), mutation_sets_mask.to(self.device))
         loss = -self.loss_func(outputs, labels.to(self.device))
         return loss
     
@@ -110,7 +109,7 @@ class MutationFactorizationModel(torch_model.TorchModel):
         
         loader_train = self.get_data_loader(sequences, labels)
         
-        self.net = self.net.set_train_data(dataset_train.mutation_sets, dataset_train.mutation_sets_mask)
+        
         self.net.train()
         self.net.likelihood.train()
         best_loss, num_no_improvement = np.inf, 0
@@ -118,6 +117,7 @@ class MutationFactorizationModel(torch_model.TorchModel):
         while (num_no_improvement < self.args.patience) and (epoch_num < self.args.max_epochs):
             loss_List = []
             for data in tqdm(loader_train, desc=f"epoch{epoch_num}"):
+                
                 loss = self.compute_loss(data)
                 loss_List.append(loss.item())
                 self.optimizer.zero_grad()
@@ -145,8 +145,7 @@ class MutationFactorizationModel(torch_model.TorchModel):
             )
             predictions = (
                 self.net(mutation_sets.to(self.device), mutation_sets_mask.to(self.device)))
-            print(f'predictions means is {predictions.mean}')
-            print(f'prediction variance{predictions.variance}')
+            
             observation = self.net.likelihood(predictions).sample()
         
         # predictions.mean

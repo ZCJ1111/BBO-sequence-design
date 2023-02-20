@@ -1,10 +1,10 @@
 python run.py \
   --device 'cpu' \
   --landscape custom \
-  --alg botorch \
-  --name 'GPmufacnet-botorch-1ADQ' \
+  --alg pex \
+  --name 'mufacnet-pex-1ADQ' \
   --num_rounds 40 \
-  --net GPmufacnet \
+  --net mufacnet \
   --ensemble_size 1 \
   --out-dir ./result \
   --fitness-data ./unify-length/1ADQ_A.csv \

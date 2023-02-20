@@ -79,6 +79,7 @@ class MutationFactorizationModel(torch_model.TorchModel):
         # Output: - loss:               [1]
 
         mutation_sets, mutation_sets_mask, labels = data
+        
         outputs = torch.squeeze(
             self.net(mutation_sets.to(self.device), mutation_sets_mask.to(self.device)), dim=-1
         )
@@ -99,7 +100,7 @@ class MutationFactorizationModel(torch_model.TorchModel):
                 .cpu()
                 .numpy()
             )
-        print(f'predictions is {predictions}')
+        
         
         predictions = np.squeeze(predictions, axis=-1)
         return predictions
