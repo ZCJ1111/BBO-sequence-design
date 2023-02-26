@@ -19,11 +19,6 @@ pip install flexs
 pip install gpytorch
 ```
 
-Alternatively, install all the packages with Poetry:
-
-```bash
-poetry install
-```
 
 ## Usage
 
