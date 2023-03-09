@@ -19,7 +19,7 @@ class ProximalExploration:
         self.batch_size = args.batch_size
         # self.num_random_mutations = args.num_random_mutations
         # self.frontier_neighbor_size = args.frontier_neighbor_size
-        self.dataset_range = args.datasetrange
+        # self.dataset_range = args.datasetrange
         self.rng = np.random.default_rng(args.seed)
 
     def propose_sequences(self, measured_sequences, **kwargs):

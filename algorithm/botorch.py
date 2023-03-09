@@ -87,7 +87,9 @@ class BO(flexs.Explorer):
             for state in states
         ]
         rewards = batch["rews"]
+        
         self.model.train(state_seqs, rewards)
+        
 
     def _recombine_population(self, gen):
         np.random.shuffle(gen)
@@ -131,6 +133,7 @@ class BO(flexs.Explorer):
         state = self.state.copy()
         states_to_screen = []
         states_to_screen=[]
+        
         ## local search for all satisfied seq candidate pool
         candidate_pool = list(set(all_seqs) - set(all_measured_seqs))
         ## not enough do global search
@@ -147,6 +150,7 @@ class BO(flexs.Explorer):
 
         ## put it outside
         ensemble_preds = landscape.get_fitness(states_to_screen) ## landscape's fitnesss
+        
         mean_pred = np.mean(ensemble_preds)
         std_pre = np.std(ensemble_preds)
 
@@ -250,7 +254,10 @@ class BO(flexs.Explorer):
             samples.update(random_sequences)
         # get predicted fitnesses of samples
         samples = list(samples)
-        preds = np.mean(self.model.get_fitness(samples))
+        
+        preds = self.model.get_fitness(samples)
+        print(f'preds is {preds}')
+        
         # train ensemble model before returning samples
         self.train_models()
 
