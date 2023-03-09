@@ -46,7 +46,9 @@ class ProximalExploration:
         eval_batch_size = self.batch_size
         for i in trange(0, len(candidate_pool), eval_batch_size, desc="Model scores"):
             candidate_batch = candidate_pool[i : i + eval_batch_size]
+            
             batch_model_scores = self.model.get_fitness(candidate_batch)
+            
             model_scores.append(batch_model_scores)
         model_scores = np.concatenate(model_scores)
 

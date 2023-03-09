@@ -1,10 +1,19 @@
 import time
 from pathlib import Path
 from typing import List
+
 import numpy as np
 import pandas as pd
+import torch
 
+import wandb
 from utils.seq_utils import levenshtein_distance
+
+
+def seed_everything(seed: int):
+    np.random.seed(seed)
+    torch.random.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)
 
 
 class Runner:
@@ -24,45 +33,53 @@ class Runner:
         # names = np.load("/home/tianyu/code/biodrug/unify-length/names.npy")
         names = list(landscape.fitness_data.keys())
         output_dir = Path(out_dir).expanduser().resolve()
-        # print(output_dir)
-        # output_dir.mkdir(exist_ok=True)
-
-        np.random.seed(runs)
+        output_dir.mkdir(exist_ok=True, parents=True)
+        print(f'model in run is {model}')
+        print(f'explorer in run is {explorer}')
+        seed_everything(runs)
         self.results = pd.DataFrame()
         starting_fitness = landscape.get_fitness([starting_sequence])[0]
-        _, _, _, _, _ = self.update_results(0, [starting_sequence], [starting_fitness], 0)
+        _, _, _, _, _ ,_= self.update_results(0, [starting_sequence], [starting_fitness], 0)
         rounds_ = []
         score_maxs = []
         mutation: list[int] = []
         mutation_counts = []
         rts = []
         searched_seq_ = []
+        score_max_this_round_=[]
         loss_ = [None]
         round_min_seq = starting_sequence
+        score_max = starting_fitness
+       
         for round in range(1, self.num_rounds + 1):
             round_start_time = time.time()
 
             if len(self.sequence_buffer) > 1:
                 print(f"Training model in round {round}")
-                loss = model.train(self.sequence_buffer, self.fitness_buffer)
-                print("loss", loss)
+                # loss = model.train_model(self.sequence_buffer, self.fitness_buffer, round=round)
+                loss = model.train(self.sequence_buffer, self.fitness_buffer, round=round)
+                
                 loss_.append(loss)
+                # loss_.append(loss)
+                print("loss", loss)
+
             # np.save('loss100custom.npy',loss_)
             # inference all sequence?
             # print('result',self.results)
             print(f"Proposing sequences in round {round}")
             if self.alg == "pexcons":
-                sequences, _ = explorer.propose_sequences(self.results, round_min_seq)
-
-            if self.alg == "antbo" or self.alg== "botorch":
-                sequences, _ = explorer.propose_sequences(self.results, landscape=landscape, all_seqs=names)
-
+                sequences, model_scores = explorer.propose_sequences(self.results, round_min_seq)
+            # elif self.alg == "antbo" or self.alg == "botorch":
+            #     sequences, model_scores = explorer.propose_sequences(
+            #         self.results, landscape=model, all_seqs=names
+            #     )
             else:
-                sequences, _ = explorer.propose_sequences(self.results, all_seqs=names)
-
+                sequences, model_scores = explorer.propose_sequences(self.results, all_seqs=names,score_max=score_max)
             assert len(sequences) <= self.num_queries_per_round
             true_scores = landscape.get_fitness(sequences)
-            # print('len true_score',len(true_scores))
+            # if model_scores[0] and true_scores[0]:
+            #     rmse = np.sqrt(np.mean(np.square(np.array(model_scores) - np.array(true_scores))))
+                # wandb.log({"RMSE": rmse, "round": round})
 
             round_mutation = []
             for seq in sequences:
@@ -71,25 +88,28 @@ class Runner:
 
             round_running_time = time.time() - round_start_time
             round_min_seq = sequences[np.argmin(round_mutation)]
-            roundss, score_max, rt, mutcounts, searched_seq = self.update_results(
+            roundss, score_max, score_max_this_round, rt, mutcounts, searched_seq = self.update_results(
                 round, sequences, true_scores, np.average(mutation), round_running_time
             )
+            # wandb.log({"mutations": mutcounts, "best_score": score_max, "score_max_this_round":score_max_this_round, "round": round})
             mutation_counts.append(mutcounts)
             rounds_.append(roundss)
             score_maxs.append(score_max)
             rts.append(rt)
             searched_seq_.append(searched_seq)
+            score_max_this_round_.append(score_max_this_round)
             result = pd.DataFrame(
                 {
                     "round": rounds_,
                     "scoremax": score_maxs,
+                    "scoremaxthisround":score_max_this_round_,
                     "run_time": rts,
                     "mutcounts": mutation_counts,
                     "loss": loss_,
                     "searched_seq": searched_seq_,
                 }
             )
-            result.to_csv(output_dir / f"trainlog_{name}_{runs}.csv", index=False)
+            result.to_csv(output_dir / f"{name}_seed{runs}.csv", index=False)
 
     def update_results(
         self,
@@ -107,6 +127,7 @@ class Runner:
                         "round": round,
                         "sequence": sequences,
                         "true_score": true_scores,
+                        "score_max_this_round":max(true_scores),
                         "mutcounts": mutcounts,
                     }
                 ),
@@ -115,11 +136,11 @@ class Runner:
             ignore_index=True,
         )
         print(
-            "round: {}  max fitness score: {:.3f}  running time: {:.2f} (sec) mutation couts:{:.3f} searched sequence number {}".format(
-                round, self.results["true_score"].max(), running_time, mutcounts, len(self.results)
+            "round: {}  max fitness score: {:.3f} score max this round: {:.3f}  running time: {:.2f} (sec) mutation counts:{:.3f} searched sequence number {}".format(
+                round, self.results["true_score"].max(), max(true_scores), running_time, mutcounts, len(self.results)
             )
         )
-        return round, self.results["true_score"].max(), running_time, mutcounts, len(self.results)
+        return round, self.results["true_score"].max(), max(true_scores), running_time, mutcounts, len(self.results)
 
     @property
     def sequence_buffer(self):

@@ -1,10 +1,10 @@
 python run.py \
   --device 'cpu' \
   --landscape custom \
-  --alg pex \
-  --name 'mufacnet-pex-1ADQ' \
+  --alg batchbo \
+  --name 'cnn-batchbo-1ADQ' \
   --num_rounds 40 \
-  --net mufacnet \
+  --net cnn \
   --ensemble_size 1 \
   --out-dir ./result \
   --fitness-data ./unify-length/1ADQ_A.csv \

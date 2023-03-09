@@ -15,10 +15,16 @@ def register_model(model_name):
 
 
 def get_model(args, **kwargs):
-    return Ensemble(
-        [model_collection[args.net](args, **kwargs) for _ in range(args.ensemble_size)],
-        args.ensemble_rule,
-    )
+    print(f'model_collection is {model_collection[args.net]}')
+    print(f'model_collection_1 is {model_collection[args.net](args,**kwargs)}')
+    
+    # return Ensemble(
+    #     [model_collection[args.net](args, **kwargs) for _ in range(args.ensemble_size)],
+    #     args.ensemble_rule,
+    # )
+    return model_collection[args.net](args,**kwargs)
+
+    # return args.net(args, **kwargs)
 
 
 for file_name in os.listdir(os.path.dirname(__file__)):
