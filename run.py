@@ -89,7 +89,7 @@ def get_args():
         default="mean",
         choices=ensemble_rules.keys(),
     )
-
+    
     args, _ = parser.parse_known_args()
 
     # Custom landscape arguments
@@ -139,8 +139,7 @@ def get_args():
         parser.add_argument(
             "--frontier_neighbor_size", help="size of the frontier neighbor", type=int, default=5
         )
-    parser.add_argument('--num_random_mutations', help='number of amino acids to mutate per sequence', type=np.int32, default=2)
-    parser.add_argument('--frontier_neighbor_size', help='size of the frontier neighbor', type=np.int32, default=5)
+    
     # MuFacNet arguments
     if args.net == "mufacnet":
         parser.add_argument(

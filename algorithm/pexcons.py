@@ -19,8 +19,8 @@ class ProximalExploration:
         self.batch_size = args.batch_size
         self.num_random_mutations = args.num_random_mutations
         self.frontier_neighbor_size = args.frontier_neighbor_size
-        self.dataset_range=args.datasetrange
-        self.cutom_data=args.custom_data_name
+        # self.dataset_range=args.datasetrange
+        # self.cutom_data=args.custom_data_name
     
     def propose_sequences(self, measured_sequences,round_min_seq):
         # Input:  - measured_sequences: pandas.DataFrame
