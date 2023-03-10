@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 import torch
 
-import wandb
+# import wandb
 from utils.seq_utils import levenshtein_distance
 
 
@@ -69,10 +69,10 @@ class Runner:
             print(f"Proposing sequences in round {round}")
             if self.alg == "pexcons":
                 sequences, model_scores = explorer.propose_sequences(self.results, round_min_seq)
-            # elif self.alg == "antbo" or self.alg == "botorch":
-            #     sequences, model_scores = explorer.propose_sequences(
-            #         self.results, landscape=model, all_seqs=names
-            #     )
+            elif self.alg == "antbo" or self.alg == "botorch":
+                sequences, model_scores = explorer.propose_sequences(
+                    self.results, landscape=model, all_seqs=names
+                )
             else:
                 sequences, model_scores = explorer.propose_sequences(self.results, all_seqs=names,score_max=score_max)
             assert len(sequences) <= self.num_queries_per_round

@@ -15,10 +15,10 @@ class ProximalExploration:
         self.alphabet = alphabet
         self.wt_sequence = starting_sequence
         self.num_queries_per_round = args.num_queries_per_round
-        # self.num_model_queries_per_round = args.num_model_queries_per_round
+        self.num_model_queries_per_round = args.num_model_queries_per_round
         self.batch_size = args.batch_size
-        # self.num_random_mutations = args.num_random_mutations
-        # self.frontier_neighbor_size = args.frontier_neighbor_size
+        self.num_random_mutations = args.num_random_mutations
+        self.frontier_neighbor_size = args.frontier_neighbor_size
         # self.dataset_range = args.datasetrange
         self.rng = np.random.default_rng(args.seed)
 
