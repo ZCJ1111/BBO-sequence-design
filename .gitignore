@@ -135,10 +135,3 @@ dmypy.json
 ## exp file
 expresult_AAV/*.csv
 expresult_avGFP/*.csv
-result/trainlog_mufacnet-botorch-1ADQ_1.csv
-result/trainlog_mufacnet-pex-1ADQ_1.csv
-result/trainlog_cnn-botorch-1ADQ_1.csv
-result/trainlog_GPmufacnet-botorch-1ADQ_1.csv
-result/trainlog_GPmufacnet-botorch1-1ADQ_1.csv
-result/trainlog_GPmufacnet-pex-1ADQ_1.csv
-test.sh

@@ -1,6 +1,5 @@
 import numpy as np
 import torch
-import gpytorch
 from torch.utils.data import DataLoader, TensorDataset
 from tqdm import tqdm
 
@@ -15,7 +14,6 @@ class TorchModel:
         self.net = net.to(self.device)
         self.optimizer = torch.optim.Adam(net.parameters(), lr=args.lr)
         self.loss_func = torch.nn.MSELoss()
-        self.likelihood= gpytorch.likelihoods.GaussianLikelihood()
 
     def get_data_loader(self, sequences, labels):
         # Input:  - sequences:    [dataset_size, sequence_length]

@@ -24,8 +24,7 @@ class Runner:
         # names = np.load("/home/tianyu/code/biodrug/unify-length/names.npy")
         names = list(landscape.fitness_data.keys())
         output_dir = Path(out_dir).expanduser().resolve()
-        # print(output_dir)
-        # output_dir.mkdir(exist_ok=True)
+        output_dir.mkdir(exist_ok=True, parents=True)
 
         np.random.seed(runs)
         self.results = pd.DataFrame()

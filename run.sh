@@ -1,13 +1,13 @@
 python run.py \
-  --device 'cpu' \
+  --device 'cuda:0' \
   --landscape custom \
-  --alg pex \
-  --name 'mufacnet-pex-1ADQ' \
+  --alg botorch \
+  --name 'esm-botorch-1ADQ' \
   --num_rounds 40 \
-  --net mufacnet \
+  --net esm1b \
   --ensemble_size 1 \
-  --out-dir ./result \
-  --fitness-data ./unify-length/1ADQ_A.csv \
+  --out-dir /home/tianyu/code/proximal-exploration-active-learning/result \
+  --fitness-data /home/tianyu/code/biodrug/unify-length/1ADQ_A.csv \
   --sequence-column 'CDR3' \
   --fitness-column 'Energy' \
   --invert-score
