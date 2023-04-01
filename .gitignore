@@ -142,3 +142,8 @@ result/trainlog_GPmufacnet-botorch-1ADQ_1.csv
 result/trainlog_GPmufacnet-botorch1-1ADQ_1.csv
 result/trainlog_GPmufacnet-pex-1ADQ_1.csv
 test.sh
+./result
+./draw.ipynb
+algorithm/pexcons.py
+algorithm/genetic.py
+./unify-length
