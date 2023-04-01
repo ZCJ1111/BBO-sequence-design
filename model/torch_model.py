@@ -12,7 +12,7 @@ class TorchModel:
         self.args = args
         self.alphabet = alphabet
         self.device = args.device
-        self.net = net.to(self.device)
+        self.net = net
         self.optimizer = torch.optim.Adam(net.parameters(), lr=args.lr)
         self.loss_func = torch.nn.MSELoss()
         self.likelihood= gpytorch.likelihoods.GaussianLikelihood()
@@ -40,7 +40,7 @@ class TorchModel:
         loss = self.loss_func(outputs, labels.to(self.device))
         return loss
 
-    def train(self, sequences, labels):
+    def train(self, sequences, labels, **kwargs):
         # Input: - sequences: [dataset_size, sequence_length]
         #        - labels:    [dataset_size]
 

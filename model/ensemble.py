@@ -12,8 +12,8 @@ class Ensemble:
         self.models = models
         self.ensemble_func = ensemble_rules[ensemble_rule]
         self.cost = 0
-        
-    def train(self, sequences, labels):
+
+    def train_model(self, sequences, labels, **kwargs):
         total_loss = 0.0
         for model in self.models:
             loss = model.train(sequences, labels)
@@ -24,6 +24,12 @@ class Ensemble:
         # Input:  - sequences:   [batch_size, sequence_length]
         # Output: - predictions: [batch_size]
         self.cost += len(sequences)
-        ensemble = self.ensemble_func([model.get_fitness(sequences) for model in self.models])
+        return self.ensemble_func([model.get_fitness(sequences) for model in self.models])
+    
+    def get_uncertainty(self,sequences):
+        fitness=[]
+        for model in self.models:
+            fitness.append(model.get_fitness(sequences))
+        fitness_std=np.std(fitness,axis=0)
 
-        return ensemble
+        return fitness_std

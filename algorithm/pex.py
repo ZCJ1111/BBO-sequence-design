@@ -15,10 +15,10 @@ class ProximalExploration:
         self.alphabet = alphabet
         self.wt_sequence = starting_sequence
         self.num_queries_per_round = args.num_queries_per_round
-        # self.num_model_queries_per_round = args.num_model_queries_per_round
+        self.num_model_queries_per_round = args.num_model_queries_per_round
         self.batch_size = args.batch_size
-        # self.num_random_mutations = args.num_random_mutations
-        # self.frontier_neighbor_size = args.frontier_neighbor_size
+        self.num_random_mutations = args.num_random_mutations
+        self.frontier_neighbor_size = args.frontier_neighbor_size
         # self.dataset_range = args.datasetrange
         self.rng = np.random.default_rng(args.seed)
 
@@ -46,7 +46,9 @@ class ProximalExploration:
         eval_batch_size = self.batch_size
         for i in trange(0, len(candidate_pool), eval_batch_size, desc="Model scores"):
             candidate_batch = candidate_pool[i : i + eval_batch_size]
+            
             batch_model_scores = self.model.get_fitness(candidate_batch)
+            
             model_scores.append(batch_model_scores)
         model_scores = np.concatenate(model_scores)
 

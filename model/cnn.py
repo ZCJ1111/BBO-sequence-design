@@ -1,6 +1,7 @@
 import gpytorch
 import torch
 import torch.nn as nn
+import numpy as np
 
 from . import register_model, torch_model
 
@@ -52,3 +53,9 @@ class CNN(nn.Module):
 class ConvolutionalNetworkModel(torch_model.TorchModel):
     def __init__(self, args, alphabet, **kwargs):
         super().__init__(args, alphabet, net=CNN(num_input_channels=len(alphabet)))
+
+    def get_uncertainty(self,sequences):
+        fitness = self.get_fitness(sequences)
+        fitness_std=np.std(fitness,axis=0)
+
+        return fitness_std

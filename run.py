@@ -89,7 +89,7 @@ def get_args():
         default="mean",
         choices=ensemble_rules.keys(),
     )
-
+    
     args, _ = parser.parse_known_args()
 
     # Custom landscape arguments
@@ -139,7 +139,7 @@ def get_args():
         parser.add_argument(
             "--frontier_neighbor_size", help="size of the frontier neighbor", type=int, default=5
         )
-
+    
     # MuFacNet arguments
     if args.net == "mufacnet":
         parser.add_argument(
@@ -148,6 +148,7 @@ def get_args():
         parser.add_argument(
             "--context_radius", help="the radius of context window", type=int, default=10
         )
+    
     
     if args.net == "GPmufacnet":
         parser.add_argument(
@@ -175,7 +176,8 @@ if __name__ == "__main__":
     print("algorithm is:", args.alg)
     landscape, starting_sequence = get_landscape(args)
     model = get_model(args, alphabet=protein_alphabet, starting_sequence=starting_sequence)
-    print(protein_alphabet)
+    print(f'model is {model}')
+    
     explorer = get_algorithm(
         args, model=model, alphabet=protein_alphabet, starting_sequence=starting_sequence
     )

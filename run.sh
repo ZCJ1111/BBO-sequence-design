@@ -1,11 +1,11 @@
 python run.py \
   --device 'cpu' \
   --landscape custom \
-  --alg pex \
-  --name 'mufacnet-pex-1ADQ' \
+  --alg antbo \
+  --name 'antbo2-cnn-1ADQ' \
   --num_rounds 40 \
-  --net mufacnet \
-  --ensemble_size 1 \
+  --net cnn \
+  --ensemble_size 3 \
   --out-dir ./result \
   --fitness-data ./unify-length/1ADQ_A.csv \
   --sequence-column 'CDR3' \
