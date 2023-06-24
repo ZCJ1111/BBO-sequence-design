@@ -1,5 +1,5 @@
 # Batch Bayesian Optimisation for protein sequence desgin
-This repository contains a PyTorch implementation of the paper Protein Sequence Design with Batch Bayesian Optimisation, which is a variant of directed evolution, which prioritizes the search for low-order mutants. Based on the local search mechanism that prioritizes the search for low-order mutants, a 1D CNN (Convolutional Neural Network) is utilized to specialize in exploring the local fitness landscape surrounding the wild type within this variant of directed evolution.
+This repository  contains a PyTorch implementation of the paper [Protein Sequence Design with Batch Bayesian Optimisation](https://arxiv.org/abs/2303.10429), which is a variant of directed evolution, which prioritizes the search for low-order mutants. Based on the local search mechanism that prioritizes the search for low-order mutants, a 1D CNN (Convolutional Neural Network) is utilized to specialize in exploring the local fitness landscape surrounding the wild type within this variant of directed evolution.
 
 # Installation
 
